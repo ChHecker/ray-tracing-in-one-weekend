@@ -3,7 +3,8 @@ use std::path::Path;
 use raytracing_in_one_weekend::*;
 
 pub fn ray_color(ray: &Ray) -> Color3 {
-    if let Some(t) = sphere::hits_sphere(ray, &Point3::new(0., 0., -1.), 0.5) {
+    if let Some(hit) = Sphere::new(Point3::new(0., 0., -1.), 0.5).hit(ray, 0., f64::INFINITY) {
+        let t = hit.t();
         let normal = (ray.at(t) - Point3::new(0., 0., -1.)).unit_vector();
         return 0.5 * Color3::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
     }
