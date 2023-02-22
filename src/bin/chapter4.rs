@@ -23,9 +23,8 @@ fn main() {
     let lower_left_corner =
         origin - horizontal / 2. - vertical / 2. - Point3::new(0., 0., focal_length);
 
-    let mut ppm = Vec::<Vec<Color3>>::new();
+    let mut ppm = Vec::<Color3>::new();
     for j in (0..image_height).rev() {
-        let mut row = Vec::<Color3>::new();
         for i in 0..image_width {
             let u = i as f64 / (image_width - 1) as f64;
             let v = j as f64 / (image_height - 1) as f64;
@@ -33,14 +32,13 @@ fn main() {
                 origin,
                 lower_left_corner + u * horizontal + v * vertical - origin,
             );
-            row.push(ray_color(&ray));
+            ppm.push(ray_color(&ray));
         }
-        ppm.push(row);
     }
-    write_ppm_vec(
+    write_ppm(
         &Path::new("images/ppm4.ppm"),
         (image_width, image_height),
-        ppm,
+        &ppm,
     )
     .unwrap();
 }
