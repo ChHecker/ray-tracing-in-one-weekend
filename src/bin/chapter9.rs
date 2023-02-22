@@ -24,10 +24,10 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
 fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
-    let image_width: usize = 400;
+    let image_width: usize = 1000;
     let image_height = (image_width as f64 / aspect_ratio) as usize;
     let samples_per_pixel: usize = 100;
-    let max_depth = 50;
+    let max_depth = 100;
 
     // Camera
     let camera = Camera::new(aspect_ratio);
@@ -35,26 +35,40 @@ fn main() {
     // World
     let mut world = HittableList::new();
 
-    let sphere1 = Sphere::new(
-        Point3::new(0., 0., -1.),
-        0.5,
-        Arc::new(Lambertian::new(Color::new(1., 0., 0.))),
-    );
-    world.push(Arc::new(sphere1));
-
-    let sphere2 = Sphere::new(
+    let ground = Sphere::new(
         Point3::new(0., -100.5, -1.),
         100.,
         Arc::new(Lambertian::new(Color::new(0., 1., 0.))),
     );
-    world.push(Arc::new(sphere2));
+    world.push(Arc::new(ground));
 
-    let sphere3 = Sphere::new(
+    let diffusive_sphere = Sphere::new(
+        Point3::new(0., 0., -1.),
+        0.5,
+        Arc::new(Lambertian::new(Color::new(1., 0., 0.))),
+    );
+    world.push(Arc::new(diffusive_sphere));
+
+    let metal_sphere = Sphere::new(
         Point3::new(-1., 0., -1.),
         0.5,
         Arc::new(Metal::new(Color::new(0.2, 0.2, 0.2), 1.)),
     );
-    world.push(Arc::new(sphere3));
+    world.push(Arc::new(metal_sphere));
+
+    let glass_sphere = Sphere::new(
+        Point3::new(1., 0., -1.),
+        0.5,
+        Arc::new(Dielectric::new(1.5)),
+    );
+    world.push(Arc::new(glass_sphere));
+
+    let inner_glass_sphere = Sphere::new(
+        Point3::new(1., 0., -1.),
+        -0.4,
+        Arc::new(Dielectric::new(1.5)),
+    );
+    world.push(Arc::new(inner_glass_sphere));
 
     // Progressbar
     let bar = ProgressBar::new((image_height * image_width).try_into().unwrap());
