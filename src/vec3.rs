@@ -281,6 +281,13 @@ impl Point3 {
     pub fn reflect(&self, normal: &Self) -> Self {
         *self - 2. * self.dot(normal) * *normal
     }
+
+    pub fn refract(&self, normal: &Self, etai_over_etat: f64) -> Self {
+        let cos_theta = f64::min(-self.dot(normal), 1.);
+        let refracted_out_perp = etai_over_etat * (*self + cos_theta * *normal);
+        let refracted_out_parallel = -(1. - refracted_out_perp.norm_sq()).abs().sqrt() * *normal;
+        refracted_out_perp + refracted_out_parallel
+    }
 }
 
 impl Vec3 for Point3 {
