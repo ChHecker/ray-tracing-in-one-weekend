@@ -227,6 +227,17 @@ impl Iterator for Color3Iter {
     }
 }
 
+impl FromIterator<f64> for Color3 {
+    fn from_iter<T: IntoIterator<Item = f64>>(iter: T) -> Self {
+        let mut iter = iter.into_iter();
+        Self(
+            iter.next().unwrap(),
+            iter.next().unwrap(),
+            iter.next().unwrap(),
+        )
+    }
+}
+
 /// Vector in 3D space
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point3(f64, f64, f64);
