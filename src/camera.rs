@@ -1,6 +1,5 @@
 use crate::*;
 
-#[derive(Debug, Copy, Clone)]
 pub struct Camera {
     origin: Point3,
     lower_left_corner: Point3,
@@ -9,8 +8,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64) -> Self {
-        let viewport_height = 2.;
+    // FOV: Radians
+    pub fn new(vertical_fov: f64, aspect_ratio: f64) -> Self {
+        let h = f64::tan(vertical_fov / 2.);
+        let viewport_height = 2. * h;
         let viewport_width = aspect_ratio * viewport_height;
         let focal_length = 1.;
 
