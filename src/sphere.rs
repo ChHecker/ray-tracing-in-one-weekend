@@ -35,10 +35,11 @@ impl Hittable for Sphere {
         }
 
         let point = ray.at(root);
-        Some(HitRecord::new(
+        Some(HitRecord::from_ray(
             point,
             (point - self.center) / self.radius,
             root,
+            ray,
         ))
     }
 }
