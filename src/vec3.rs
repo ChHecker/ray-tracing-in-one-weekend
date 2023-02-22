@@ -1,5 +1,7 @@
 use std::ops;
 
+use crate::clamp;
+
 /// Three-dimensional Cartesian vector
 pub trait Vec3 {
     fn new(x: f64, y: f64, z: f64) -> Self;
@@ -47,9 +49,9 @@ impl Color3 {
     pub fn to_color_str(&self) -> String {
         format!(
             "{} {} {}",
-            (255.999 * self.x()) as u8,
-            (255.999 * self.y()) as u8,
-            (255.999 * self.z()) as u8
+            (256. * clamp(self.x(), 0., 0.999)) as u8,
+            (256. * clamp(self.y(), 0., 0.999)) as u8,
+            (256. * clamp(self.z(), 0., 0.999)) as u8
         )
     }
 }
