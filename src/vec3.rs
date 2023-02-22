@@ -1,10 +1,45 @@
 use std::ops;
 
+use rand::Rng;
+
 use crate::clamp;
 
 /// Three-dimensional Cartesian vector
 pub trait Vec3 {
     fn new(x: f64, y: f64, z: f64) -> Self;
+
+    fn random() -> Self
+    where
+        Self: Sized,
+    {
+        let mut rng = rand::thread_rng();
+        Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>())
+    }
+
+    fn random_in_range(min: f64, max: f64) -> Self
+    where
+        Self: Sized,
+    {
+        let mut rng = rand::thread_rng();
+        Self::new(
+            min + rng.gen::<f64>() * (max - min),
+            min + rng.gen::<f64>() * (max - min),
+            min + rng.gen::<f64>() * (max - min),
+        )
+    }
+
+    fn random_in_unit_sphere() -> Self
+    where
+        Self: Sized,
+    {
+        let mut rng = rand::thread_rng();
+        loop {
+            let rand = Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>());
+            if rand.norm_sq() < 1. {
+                return rand;
+            }
+        }
+    }
 
     fn x(&self) -> f64;
     fn y(&self) -> f64;
@@ -42,6 +77,7 @@ pub trait Vec3 {
     }
 }
 
+/// Color in RGB between 0 and 1
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Color3(f64, f64, f64);
 
@@ -191,6 +227,7 @@ impl Iterator for Color3Iter {
     }
 }
 
+/// Vector in 3D space
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point3(f64, f64, f64);
 
