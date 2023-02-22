@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{Point3, Ray, Vec3};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -57,4 +59,38 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+}
+
+pub struct HittableList {
+    hittables: Vec<Rc<dyn Hittable>>,
+}
+
+impl HittableList {
+    pub fn new() -> Self {
+        Self {
+            hittables: Vec::<Rc<dyn Hittable>>::new(),
+        }
+    }
+
+    pub fn push(&mut self, hittable: Rc<dyn Hittable>) {
+        self.hittables.push(hittable);
+    }
+
+    pub fn clear(&mut self) {
+        self.hittables.clear();
+    }
+
+    pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut hit_record_final: Option<HitRecord> = None;
+        let mut closest_so_far = t_max;
+
+        for hittable in &self.hittables {
+            if let Some(hit_record) = hittable.hit(ray, t_min, closest_so_far) {
+                closest_so_far = hit_record.t();
+                hit_record_final = Some(hit_record);
+            }
+        }
+
+        hit_record_final
+    }
 }
