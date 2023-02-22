@@ -9,7 +9,7 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color3 {
         return Color3::new(0., 0., 0.);
     }
 
-    if let Some(hit) = world.hit(ray, 0., f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
         let target = hit.point() + hit.normal() + Point3::random_in_unit_sphere();
         return 0.5
             * ray_color(
