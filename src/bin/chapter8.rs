@@ -10,7 +10,7 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color3 {
     }
 
     if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
-        let target = hit.point() + hit.normal() + Point3::random_in_unit_sphere();
+        let target = hit.point() + hit.normal() + Point3::random_unit_vector();
         return 0.5
             * ray_color(
                 world,
@@ -67,7 +67,7 @@ fn main() {
     });
 
     write_ppm(
-        &Path::new("images/ppm8.ppm"),
+        &Path::new("images/ppm8_lambert.ppm"),
         (image_width, image_height),
         &ppm,
     )

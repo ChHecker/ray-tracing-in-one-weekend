@@ -41,6 +41,13 @@ pub trait Vec3 {
         }
     }
 
+    fn random_unit_vector() -> Self
+    where
+        Self: Sized,
+    {
+        Self::random_in_unit_sphere().unit_vector()
+    }
+
     fn x(&self) -> f64;
     fn y(&self) -> f64;
     fn z(&self) -> f64;
