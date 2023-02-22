@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use raytracing_in_one_weekend::{ppm::write_ppm_vec, *};
+use raytracing_in_one_weekend::*;
 
 pub fn ray_color(ray: &Ray) -> Color3 {
     if sphere::hits_sphere(ray, &Point3::new(0., 0., -1.), 0.5) {
