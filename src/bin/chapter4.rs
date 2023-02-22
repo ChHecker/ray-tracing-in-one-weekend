@@ -10,8 +10,8 @@ pub fn ray_color(ray: &Ray) -> Color3 {
 
 fn main() {
     let aspect_ratio = 16. / 9.;
-    let width: usize = 400;
-    let height = (width as f64 / aspect_ratio) as usize;
+    let image_width: usize = 400;
+    let image_height = (image_width as f64 / aspect_ratio) as usize;
 
     let viewport_height = 2.0;
     let viewport_width = aspect_ratio * viewport_height;
@@ -24,11 +24,11 @@ fn main() {
         origin - horizontal / 2. - vertical / 2. - Point3::new(0., 0., focal_length);
 
     let mut ppm = Vec::<Vec<Color3>>::new();
-    for j in (0..height).rev() {
+    for j in (0..image_height).rev() {
         let mut row = Vec::<Color3>::new();
-        for i in 0..width {
-            let u = i as f64 / 255.;
-            let v = j as f64 / 255.;
+        for i in 0..image_width {
+            let u = i as f64 / (image_width - 1) as f64;
+            let v = j as f64 / (image_height - 1) as f64;
             let ray = Ray::new(
                 origin,
                 lower_left_corner + u * horizontal + v * vertical - origin,
@@ -37,5 +37,10 @@ fn main() {
         }
         ppm.push(row);
     }
-    write_ppm_vec(&Path::new("images/ppm4.ppm"), (width, height), ppm).unwrap();
+    write_ppm_vec(
+        &Path::new("images/ppm4.ppm"),
+        (image_width, image_height),
+        ppm,
+    )
+    .unwrap();
 }
