@@ -1,4 +1,4 @@
-use std::{path::Path, rc::Rc};
+use std::{path::Path, sync::Arc};
 
 use rand::Rng;
 use raytracing_in_one_weekend::*;
@@ -25,8 +25,8 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.push(Rc::new(Sphere::new(Point3::new(0., 0., -1.), 0.5)));
-    world.push(Rc::new(Sphere::new(Point3::new(0., -100.5, -1.), 100.)));
+    world.push(Arc::new(Sphere::new(Point3::new(0., 0., -1.), 0.5)));
+    world.push(Arc::new(Sphere::new(Point3::new(0., -100.5, -1.), 100.)));
 
     let mut rng = rand::thread_rng();
 
