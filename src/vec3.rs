@@ -23,15 +23,19 @@ pub trait Vec3 {
         )
     }
 
-    fn abs(&self) -> f64 {
+    fn norm(&self) -> f64 {
         f64::sqrt(self.dot(self))
+    }
+
+    fn norm_sq(&self) -> f64 {
+        self.dot(self)
     }
 
     fn unit_vector(&self) -> Self
     where
         Self: Sized,
     {
-        let abs = self.abs();
+        let abs = self.norm();
         Self::new(self.x() / abs, self.y() / abs, self.z() / abs)
     }
 }
@@ -382,7 +386,7 @@ mod tests {
     #[test]
     fn abs() {
         let v = Color3(1., 2., 3.);
-        assert_eq!(v.abs(), f64::sqrt(14.))
+        assert_eq!(v.norm(), f64::sqrt(14.))
     }
 
     #[test]
