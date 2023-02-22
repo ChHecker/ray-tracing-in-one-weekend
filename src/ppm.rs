@@ -56,10 +56,7 @@ pub fn write_ppm(path: &Path, dim: (usize, usize), arr: &[Color3]) -> io::Result
     let mut out = String::new();
 
     out.push_str(&format!("P3\n{} {}\n255\n", dim.0, dim.1));
-    for (i, color) in arr.into_iter().enumerate() {
-        if i % dim.0 == 0 {
-            println!("{} / {} lines done.", i / dim.0 + 1, dim.1);
-        }
+    for (_, color) in arr.into_iter().enumerate() {
         out.push_str(&color.to_color_str());
         out.push_str(&"\n");
     }

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{Point3, Ray, Vec3};
 
@@ -62,17 +62,17 @@ pub trait Hittable {
 }
 
 pub struct HittableList {
-    hittables: Vec<Rc<dyn Hittable>>,
+    hittables: Vec<Arc<dyn Hittable + Sync + Send>>,
 }
 
 impl HittableList {
     pub fn new() -> Self {
         Self {
-            hittables: Vec::<Rc<dyn Hittable>>::new(),
+            hittables: Vec::<Arc<dyn Hittable + Sync + Send>>::new(),
         }
     }
 
-    pub fn push(&mut self, hittable: Rc<dyn Hittable>) {
+    pub fn push(&mut self, hittable: Arc<dyn Hittable + Sync + Send>) {
         self.hittables.push(hittable);
     }
 
