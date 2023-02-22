@@ -28,26 +28,6 @@ pub trait Vec3 {
         )
     }
 
-    fn random_in_unit_sphere() -> Self
-    where
-        Self: Sized,
-    {
-        let mut rng = rand::thread_rng();
-        loop {
-            let rand = Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>());
-            if rand.norm_sq() < 1. {
-                return rand;
-            }
-        }
-    }
-
-    fn random_unit_vector() -> Self
-    where
-        Self: Sized,
-    {
-        Self::random_in_unit_sphere().unit_vector()
-    }
-
     fn x(&self) -> f64;
     fn y(&self) -> f64;
     fn z(&self) -> f64;
@@ -257,6 +237,28 @@ impl Point3 {
             (255.999 * self.y()) as u8,
             (255.999 * self.z()) as u8
         )
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        let mut rng = rand::thread_rng();
+        loop {
+            let rand = Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>());
+            if rand.norm_sq() < 1. {
+                return rand;
+            }
+        }
+    }
+
+    pub fn random_unit_vector() -> Self {
+        Self::random_in_unit_sphere().unit_vector()
+    }
+
+    pub fn random_in_hemisphere(normal: &Self) -> Self {
+        let rand = Self::random_in_unit_sphere();
+        if rand.dot(&normal) > 0. {
+            return rand;
+        }
+        -rand
     }
 }
 
