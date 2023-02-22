@@ -1,16 +1,20 @@
-use crate::{
-    hittable::{HitRecord, Hittable},
-    Point3, Ray, Vec3,
-};
+use std::sync::Arc;
+
+use crate::*;
 
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Arc<dyn Material + Sync + Send>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material + Sync + Send>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -39,6 +43,7 @@ impl Hittable for Sphere {
             point,
             (point - self.center) / self.radius,
             root,
+            self.material.clone(),
             ray,
         ))
     }

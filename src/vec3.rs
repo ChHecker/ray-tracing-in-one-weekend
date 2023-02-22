@@ -1,8 +1,6 @@
-use std::ops;
-
-use rand::Rng;
-
 use crate::clamp;
+use rand::Rng;
+use std::ops;
 
 /// Three-dimensional Cartesian vector
 pub trait Vec3 {
@@ -62,13 +60,18 @@ pub trait Vec3 {
         let abs = self.norm();
         Self::new(self.x() / abs, self.y() / abs, self.z() / abs)
     }
+
+    fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.x().abs() < s && self.y().abs() < s && self.z().abs() < s
+    }
 }
 
 /// Color in RGB between 0 and 1
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Color3(f64, f64, f64);
+pub struct Color(f64, f64, f64);
 
-impl Color3 {
+impl Color {
     pub fn to_color_str(&self) -> String {
         format!(
             "{} {} {}",
@@ -79,9 +82,9 @@ impl Color3 {
     }
 }
 
-impl Vec3 for Color3 {
+impl Vec3 for Color {
     fn new(r: f64, g: f64, b: f64) -> Self {
-        Color3(r, g, b)
+        Color(r, g, b)
     }
 
     fn x(&self) -> f64 {
@@ -97,79 +100,93 @@ impl Vec3 for Color3 {
     }
 }
 
-impl ops::Add<Color3> for Color3 {
+impl ops::Add<Color> for Color {
     type Output = Self;
 
-    fn add(self, rhs: Color3) -> Self::Output {
-        Color3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    fn add(self, rhs: Color) -> Self::Output {
+        Color(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
     }
 }
 
-impl ops::AddAssign<Color3> for Color3 {
-    fn add_assign(&mut self, rhs: Color3) {
+impl ops::AddAssign<Color> for Color {
+    fn add_assign(&mut self, rhs: Color) {
         *self = *self + rhs;
     }
 }
 
-impl ops::Sub<Color3> for Color3 {
+impl ops::Sub<Color> for Color {
     type Output = Self;
 
-    fn sub(self, rhs: Color3) -> Self::Output {
-        Color3(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    fn sub(self, rhs: Color) -> Self::Output {
+        Color(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
 
-impl ops::SubAssign<Color3> for Color3 {
-    fn sub_assign(&mut self, rhs: Color3) {
+impl ops::SubAssign<Color> for Color {
+    fn sub_assign(&mut self, rhs: Color) {
         *self = *self - rhs;
     }
 }
 
-impl ops::Mul<f64> for Color3 {
+impl ops::Mul<f64> for Color {
     type Output = Self;
 
     fn mul(self, rhs: f64) -> Self::Output {
-        Color3(rhs * self.0, rhs * self.1, rhs * self.2)
+        Color(rhs * self.0, rhs * self.1, rhs * self.2)
     }
 }
 
-impl ops::Mul<Color3> for f64 {
-    type Output = Color3;
+impl ops::Mul<Color> for f64 {
+    type Output = Color;
 
-    fn mul(self, rhs: Color3) -> Self::Output {
-        Color3(self * rhs.0, self * rhs.1, self * rhs.2)
+    fn mul(self, rhs: Color) -> Self::Output {
+        Color(self * rhs.0, self * rhs.1, self * rhs.2)
     }
 }
 
-impl ops::MulAssign<f64> for Color3 {
+impl ops::MulAssign<f64> for Color {
     fn mul_assign(&mut self, rhs: f64) {
         *self = rhs * *self;
     }
 }
 
-impl ops::Div<f64> for Color3 {
+impl ops::Mul<Color> for Color {
     type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
-        Color3(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+    fn mul(self, rhs: Color) -> Self::Output {
+        Color(rhs.0 * self.0, rhs.1 * self.1, rhs.2 * self.2)
     }
 }
 
-impl ops::DivAssign<f64> for Color3 {
+impl ops::MulAssign<Color> for Color {
+    fn mul_assign(&mut self, rhs: Color) {
+        *self = rhs * *self;
+    }
+}
+
+impl ops::Div<f64> for Color {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Color(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+    }
+}
+
+impl ops::DivAssign<f64> for Color {
     fn div_assign(&mut self, rhs: f64) {
         *self = *self / rhs;
     }
 }
 
-impl ops::Neg for Color3 {
+impl ops::Neg for Color {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Color3(-self.0, -self.1, -self.2)
+        Color(-self.0, -self.1, -self.2)
     }
 }
 
-impl ops::Index<u8> for Color3 {
+impl ops::Index<u8> for Color {
     type Output = f64;
 
     fn index(&self, index: u8) -> &Self::Output {
@@ -184,10 +201,10 @@ impl ops::Index<u8> for Color3 {
 
 pub struct Color3Iter {
     index: usize,
-    col3: Color3,
+    col3: Color,
 }
 
-impl IntoIterator for Color3 {
+impl IntoIterator for Color {
     type Item = f64;
     type IntoIter = Color3Iter;
 
@@ -214,7 +231,7 @@ impl Iterator for Color3Iter {
     }
 }
 
-impl FromIterator<f64> for Color3 {
+impl FromIterator<f64> for Color {
     fn from_iter<T: IntoIterator<Item = f64>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
         Self(
@@ -259,6 +276,10 @@ impl Point3 {
             return rand;
         }
         -rand
+    }
+
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - 2. * self.dot(normal) * *normal
     }
 }
 
@@ -403,61 +424,61 @@ mod tests {
 
     #[test]
     fn add() {
-        let v1 = Color3(1., 2., 3.);
-        let v2 = Color3(4., 5., 6.);
-        assert_eq!(v1 + v2, Color3(5., 7., 9.))
+        let v1 = Color(1., 2., 3.);
+        let v2 = Color(4., 5., 6.);
+        assert_eq!(v1 + v2, Color(5., 7., 9.))
     }
 
     #[test]
     fn sub() {
-        let v1 = Color3(1., 2., 3.);
-        let v2 = Color3(4., 5., 6.);
-        assert_eq!(v2 - v1, Color3(3., 3., 3.))
+        let v1 = Color(1., 2., 3.);
+        let v2 = Color(4., 5., 6.);
+        assert_eq!(v2 - v1, Color(3., 3., 3.))
     }
 
     #[test]
     fn mul() {
-        let v = Color3(1., 2., 3.);
+        let v = Color(1., 2., 3.);
         assert_eq!(3. * v, v * 3.);
-        assert_eq!(3. * v, Color3(3., 6., 9.));
+        assert_eq!(3. * v, Color(3., 6., 9.));
     }
 
     #[test]
     fn div() {
-        let v = Color3(1., 2., 3.);
-        assert_eq!(v / 2., Color3(0.5, 1., 1.5));
+        let v = Color(1., 2., 3.);
+        assert_eq!(v / 2., Color(0.5, 1., 1.5));
     }
 
     #[test]
     fn dot() {
-        let v1 = Color3(1., 2., 3.);
-        let v2 = Color3(4., 5., 6.);
+        let v1 = Color(1., 2., 3.);
+        let v2 = Color(4., 5., 6.);
         assert_eq!(v1.dot(&v2), 32.)
     }
 
     #[test]
     fn cross() {
-        let v1 = Color3(1., 2., 3.);
-        let v2 = Color3(4., 5., 6.);
-        assert_eq!(v1.cross(&v2), Color3(-3., 6., -3.))
+        let v1 = Color(1., 2., 3.);
+        let v2 = Color(4., 5., 6.);
+        assert_eq!(v1.cross(&v2), Color(-3., 6., -3.))
     }
 
     #[test]
     fn abs() {
-        let v = Color3(1., 2., 3.);
+        let v = Color(1., 2., 3.);
         assert_eq!(v.norm(), f64::sqrt(14.))
     }
 
     #[test]
     fn unit_vector() {
-        let v = Color3(1., 2., 3.);
+        let v = Color(1., 2., 3.);
         assert_eq!(v.unit_vector(), v / f64::sqrt(14.))
     }
 
     #[test]
     #[should_panic]
     fn index() {
-        let v = Color3(1., 2., 3.);
+        let v = Color(1., 2., 3.);
         v[3];
     }
 }

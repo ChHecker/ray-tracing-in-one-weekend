@@ -3,14 +3,14 @@ use std::{path::Path, sync::Arc};
 use rand::Rng;
 use raytracing_in_one_weekend::*;
 
-pub fn ray_color(world: &HittableList, ray: &Ray) -> Color3 {
+pub fn ray_color(world: &HittableList, ray: &Ray) -> Color {
     if let Some(hit) = world.hit(ray, 0., f64::INFINITY) {
         let normal = hit.normal();
-        return 0.5 * Color3::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
+        return 0.5 * Color::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
     }
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color3::new(1., 1., 1.) + t * Color3::new(0.5, 0.7, 1.0)
+    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -30,10 +30,10 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let mut ppm = Vec::<Color3>::new();
+    let mut ppm = Vec::<Color>::new();
     for j in (0..image_height).rev() {
         for i in 0..image_width {
-            let mut pixel_color = Color3::new(0., 0., 0.);
+            let mut pixel_color = Color::new(0., 0., 0.);
             for _ in 0..samples_per_pixel {
                 let u = (i as f64 + rng.gen::<f64>()) / (image_width - 1) as f64;
                 let v = (j as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;

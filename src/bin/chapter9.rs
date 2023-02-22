@@ -10,14 +10,12 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
     }
 
     if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
-        let target = hit.point() + hit.normal() + Point3::random_in_hemisphere(&hit.normal()); // + Point3::random_unit_vector();
-        return 0.5
-            * ray_color(
-                world,
-                &Ray::new(hit.point(), target - hit.point()),
-                depth - 1,
-            );
+        if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
+            return attenuation * ray_color(&world, &scattered, depth - 1);
+        }
+        return Color::new(0., 0., 0.);
     }
+
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
     (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
@@ -36,8 +34,27 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.push(Arc::new(Sphere::new(Point3::new(0., 0., -1.), 0.5)));
-    world.push(Arc::new(Sphere::new(Point3::new(0., -100.5, -1.), 100.)));
+
+    let sphere1 = Sphere::new(
+        Point3::new(0., 0., -1.),
+        0.5,
+        Arc::new(Lambertian::new(Color::new(1., 0., 0.))),
+    );
+    world.push(Arc::new(sphere1));
+
+    let sphere2 = Sphere::new(
+        Point3::new(0., -100.5, -1.),
+        100.,
+        Arc::new(Lambertian::new(Color::new(0., 1., 0.))),
+    );
+    world.push(Arc::new(sphere2));
+
+    let sphere3 = Sphere::new(
+        Point3::new(-1., 0., -1.),
+        0.5,
+        Arc::new(Metal::new(Color::new(0.2, 0.2, 0.2), 1.)),
+    );
+    world.push(Arc::new(sphere3));
 
     // Progressbar
     let bar = ProgressBar::new((image_height * image_width).try_into().unwrap());
@@ -67,7 +84,7 @@ fn main() {
     });
 
     write_ppm(
-        &Path::new("images/ppm8_hemisphere.ppm"),
+        &Path::new("images/ppm9.ppm"),
         (image_width, image_height),
         &ppm,
     )
