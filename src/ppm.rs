@@ -3,10 +3,10 @@ use std::io;
 use std::io::Write;
 use std::path::Path;
 
-use crate::vec3::Color3;
+use crate::vec3::Color;
 
 /// Writes vector `vec` of dimension `dim` (x, y) into a PPM file
-pub fn write_ppm_vec(path: &Path, dim: (usize, usize), vec: Vec<Vec<Color3>>) -> io::Result<()> {
+pub fn write_ppm_vec(path: &Path, dim: (usize, usize), vec: Vec<Vec<Color>>) -> io::Result<()> {
     let mut path = path.to_path_buf();
     match path.extension() {
         Some(ext) => {
@@ -37,7 +37,7 @@ pub fn write_ppm_vec(path: &Path, dim: (usize, usize), vec: Vec<Vec<Color3>>) ->
 }
 
 /// Writes array `arr` of dimension `x * y` into a PPM file
-pub fn write_ppm(path: &Path, dim: (usize, usize), arr: &[Color3]) -> io::Result<()> {
+pub fn write_ppm(path: &Path, dim: (usize, usize), arr: &[Color]) -> io::Result<()> {
     let mut path = path.to_path_buf();
     match path.extension() {
         Some(ext) => {

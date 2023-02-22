@@ -1,32 +1,46 @@
 use std::sync::Arc;
 
-use crate::{Point3, Ray, Vec3};
+use crate::*;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct HitRecord {
     point: Point3,
     normal: Point3,
     t: f64,
     front_face: bool,
+    material: Arc<dyn Material + Sync + Send>,
 }
 
 impl HitRecord {
-    pub fn new(point: Point3, normal: Point3, t: f64, front_face: bool) -> Self {
+    pub fn new(
+        point: Point3,
+        normal: Point3,
+        t: f64,
+        front_face: bool,
+        material: Arc<dyn Material + Sync + Send>,
+    ) -> Self {
         HitRecord {
             point,
             normal,
             t,
             front_face,
+            material,
         }
     }
 
-    pub fn from_ray(point: Point3, normal: Point3, t: f64, ray: &Ray) -> Self {
+    pub fn from_ray(
+        point: Point3,
+        normal: Point3,
+        t: f64,
+        material: Arc<dyn Material + Sync + Send>,
+        ray: &Ray,
+    ) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
         HitRecord {
             point,
             normal,
             t,
             front_face,
+            material,
         }
     }
 
@@ -44,6 +58,10 @@ impl HitRecord {
 
     pub fn front_face(&self) -> bool {
         self.front_face
+    }
+
+    pub fn material(&self) -> Arc<dyn Material + Sync + Send> {
+        self.material.clone()
     }
 
     fn face_normal(ray: &Ray, outward_normal: Point3) -> (bool, Point3) {

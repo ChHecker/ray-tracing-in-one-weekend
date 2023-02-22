@@ -2,13 +2,13 @@ use std::path::Path;
 
 use raytracing_in_one_weekend::*;
 
-pub fn ray_color(ray: &Ray) -> Color3 {
+pub fn ray_color(ray: &Ray) -> Color {
     if let Some(_) = Sphere::new(Point3::new(0., 0., -1.), 0.5).hit(ray, 0., f64::INFINITY) {
-        return Color3::new(1., 0., 0.);
+        return Color::new(1., 0., 0.);
     }
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color3::new(1., 1., 1.) + t * Color3::new(0.5, 0.7, 1.0)
+    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -26,7 +26,7 @@ fn main() {
     let lower_left_corner =
         origin - horizontal / 2. - vertical / 2. - Point3::new(0., 0., focal_length);
 
-    let mut ppm = Vec::<Color3>::new();
+    let mut ppm = Vec::<Color>::new();
     for j in (0..image_height).rev() {
         for i in 0..image_width {
             let u = i as f64 / (image_width - 1) as f64;
