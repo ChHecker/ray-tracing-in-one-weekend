@@ -4,7 +4,7 @@ pub mod ray;
 pub mod sphere;
 pub mod vec3;
 
-pub use hittable::{HitRecord, Hittable};
+pub use hittable::{HitRecord, Hittable, HittableList};
 pub use ppm::write_ppm;
 pub use ray::Ray;
 pub use sphere::Sphere;
