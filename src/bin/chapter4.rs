@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use raytracing_in_one_weekend::{ppm::write_ppm_vec, *};
+use raytracing_in_one_weekend::*;
 
 pub fn ray_color(ray: &Ray) -> Color3 {
     let unit_direction = ray.direction().unit_vector();
