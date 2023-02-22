@@ -55,7 +55,11 @@ fn main() {
             let v = (j as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;
             pixel_color += ray_color(&world, &camera.get_ray(u, v), max_depth);
         }
-        pixel_color /= samples_per_pixel as f64;
+        pixel_color = Color3::new(
+            (pixel_color.x() / samples_per_pixel as f64).sqrt(),
+            (pixel_color.y() / samples_per_pixel as f64).sqrt(),
+            (pixel_color.z() / samples_per_pixel as f64).sqrt(),
+        );
 
         bar.inc(1);
 
