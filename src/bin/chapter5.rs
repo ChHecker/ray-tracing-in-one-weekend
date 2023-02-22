@@ -3,7 +3,7 @@ use std::path::Path;
 use raytracing_in_one_weekend::*;
 
 pub fn ray_color(ray: &Ray) -> Color3 {
-    if let Some(_) = sphere::hits_sphere(ray, &Point3::new(0., 0., -1.), 0.5) {
+    if let Some(_) = Sphere::new(Point3::new(0., 0., -1.), 0.5).hit(ray, 0., f64::INFINITY) {
         return Color3::new(1., 0., 0.);
     }
     let unit_direction = ray.direction().unit_vector();
