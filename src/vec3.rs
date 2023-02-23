@@ -278,6 +278,16 @@ impl Point3 {
         -rand
     }
 
+    pub fn random_in_unit_disk() -> Self {
+        let mut rng = rand::thread_rng();
+        loop {
+            let rand = Point3::new(-1. + rng.gen::<f64>() * 2., -1. + rng.gen::<f64>() * 2., 0.);
+            if rand.norm_sq() < 1. {
+                return rand;
+            }
+        }
+    }
+
     pub fn reflect(&self, normal: &Self) -> Self {
         *self - 2. * self.dot(normal) * *normal
     }
