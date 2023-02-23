@@ -19,7 +19,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.origin() - self.center;
         let a = ray.direction().norm_sq();
         let b_halves = oc.dot(&ray.direction());
@@ -76,7 +76,7 @@ impl Hittable for Sphere {
 // }
 
 // impl Hittable for Cylinder {
-//     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+//     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
 //         let oc = ray.origin() - self.center;
 //         let a = ray.direction().norm_sq();
 //         let b_halves = oc.dot(&ray.direction());

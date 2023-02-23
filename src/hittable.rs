@@ -32,7 +32,7 @@ impl HitRecord {
         normal: Point3,
         t: f64,
         material: Arc<dyn Material + Sync + Send>,
-        ray: &Ray,
+        ray: Ray,
     ) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
         HitRecord {
@@ -64,7 +64,7 @@ impl HitRecord {
         self.material.clone()
     }
 
-    fn face_normal(ray: &Ray, outward_normal: Point3) -> (bool, Point3) {
+    fn face_normal(ray: Ray, outward_normal: Point3) -> (bool, Point3) {
         let front_face = ray.direction().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
@@ -76,7 +76,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 pub struct HittableList {
@@ -98,7 +98,7 @@ impl HittableList {
         self.hittables.clear();
     }
 
-    pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    pub fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
 

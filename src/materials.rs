@@ -3,7 +3,7 @@ use rand::Rng;
 use crate::*;
 
 pub trait Material {
-    fn scatter(&self, ray: &Ray, hit: HitRecord) -> Option<(Ray, Color)>;
+    fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
 }
 
 pub struct Lambertian {
@@ -17,7 +17,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray: &Ray, hit: HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, _ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut scatter_direction = hit.normal() + Point3::random_unit_vector();
 
         if scatter_direction.near_zero() {
@@ -42,7 +42,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray: &Ray, hit: HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let reflected = ray.direction().unit_vector().reflect(&hit.normal());
         let scattered = Ray::new(
             hit.point(),
@@ -74,7 +74,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray: &Ray, hit: HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut rng = rand::thread_rng();
 
         let refraction_ratio = if hit.front_face() {
