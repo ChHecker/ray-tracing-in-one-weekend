@@ -3,14 +3,16 @@ pub mod hittable;
 pub mod materials;
 pub mod ppm;
 pub mod ray;
+pub mod raytracer;
 pub mod shapes;
 pub mod vec3;
 
 pub use camera::Camera;
 pub use hittable::{HitRecord, Hittable, HittableList};
 pub use materials::{Dielectric, Lambertian, Material, Metal};
-pub use ppm::write_ppm;
+pub use ppm::PPM;
 pub use ray::Ray;
+pub use raytracer::Raytracer;
 pub use shapes::Sphere;
 pub use vec3::{Color, Point3, Vec3};
 
