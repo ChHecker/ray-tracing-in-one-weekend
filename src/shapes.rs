@@ -2,14 +2,16 @@ use std::sync::Arc;
 
 use crate::*;
 
+type MaterialArc = Arc<dyn Material>;
+
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Arc<dyn Material + Sync + Send>,
+    material: MaterialArc,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material + Sync + Send>) -> Self {
+    pub fn new(center: Point3, radius: f64, material: MaterialArc) -> Self {
         Self {
             center,
             radius,
@@ -54,7 +56,7 @@ impl Hittable for Sphere {
 //     radius: f64,
 //     height: f64,
 //     orientation: Point3,
-//     material: Arc<dyn Material + Sync + Send>,
+//     material: MaterialArc,
 // }
 
 // impl Cylinder {
@@ -63,7 +65,7 @@ impl Hittable for Sphere {
 //         radius: f64,
 //         height: f64,
 //         orientation: Point3,
-//         material: Arc<dyn Material + Sync + Send>,
+//         material: MaterialArc,
 //     ) -> Self {
 //         Self {
 //             center,
