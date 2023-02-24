@@ -1,9 +1,9 @@
 use crate::clamp;
 use rand::Rng;
-use std::ops;
+use std::{fmt, ops};
 
 /// Three-dimensional Cartesian vector
-pub trait Vec3 {
+pub trait Vec3: Copy + Clone + fmt::Debug + PartialEq {
     fn new(x: f64, y: f64, z: f64) -> Self;
 
     fn random() -> Self
