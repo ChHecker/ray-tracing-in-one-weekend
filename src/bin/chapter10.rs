@@ -78,14 +78,6 @@ fn random_world(world: &mut HittableList) {
         }
     }
 
-    // auto material1 = make_shared<dielectric>(1.5);
-    // world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
-
-    // auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    // world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
-
-    // auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    // world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
     let material1 = Arc::new(Dielectric::new(1.5));
     let sphere1 = Arc::new(Sphere::new(Point3::new(0., 1., 0.), 1., material1));
     world.push(sphere1);
