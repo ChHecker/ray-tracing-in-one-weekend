@@ -5,61 +5,49 @@ use std::path::Path;
 
 use crate::vec3::Color;
 
-/// Writes vector `vec` of dimension `dim` (x, y) into a PPM file
-pub fn write_ppm_vec(path: &Path, dim: (usize, usize), vec: Vec<Vec<Color>>) -> io::Result<()> {
-    let mut path = path.to_path_buf();
-    match path.extension() {
-        Some(ext) => {
-            if ext != "ppm" {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Invalid file extension",
-                ));
-            };
-        }
-        None => {
-            path.set_extension("ppm");
+pub struct PPM {
+    colors: Vec<Color>,
+    image_width: usize,
+    image_height: usize,
+}
+
+impl PPM {
+    pub fn new(colors: Vec<Color>, image_width: usize, image_height: usize) -> Self {
+        Self {
+            colors,
+            image_width,
+            image_height,
         }
     }
-    let mut file = fs::File::create(path)?;
-    let mut out = String::new();
 
-    out.push_str(&format!("P3\n{} {}\n255\n", dim.0, dim.1));
-    for (i, color_vec) in vec.into_iter().enumerate() {
-        println!("{} / {} lines done.", i + 1, dim.1);
-        for (_, color) in color_vec.into_iter().enumerate() {
+    /// Writes array `arr` of dimension `x * y` into a PPM file
+    pub fn write_ppm(&self, path: &Path) -> io::Result<()> {
+        let mut path = path.to_path_buf();
+        match path.extension() {
+            Some(ext) => {
+                if ext != "ppm" {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "Invalid file extension",
+                    ));
+                };
+            }
+            None => {
+                path.set_extension("ppm");
+            }
+        }
+        let mut file = fs::File::create(path)?;
+        let mut out = String::new();
+
+        out.push_str(&format!(
+            "P3\n{} {}\n255\n",
+            self.image_width, self.image_height
+        ));
+        for (_, color) in self.colors.iter().enumerate() {
             out.push_str(&color.to_color_str());
             out.push_str(&"\n");
         }
+
+        file.write_all(out.as_bytes())
     }
-
-    file.write_all(out.as_bytes())
-}
-
-/// Writes array `arr` of dimension `x * y` into a PPM file
-pub fn write_ppm(path: &Path, dim: (usize, usize), arr: &[Color]) -> io::Result<()> {
-    let mut path = path.to_path_buf();
-    match path.extension() {
-        Some(ext) => {
-            if ext != "ppm" {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "Invalid file extension",
-                ));
-            };
-        }
-        None => {
-            path.set_extension("ppm");
-        }
-    }
-    let mut file = fs::File::create(path)?;
-    let mut out = String::new();
-
-    out.push_str(&format!("P3\n{} {}\n255\n", dim.0, dim.1));
-    for (_, color) in arr.into_iter().enumerate() {
-        out.push_str(&color.to_color_str());
-        out.push_str(&"\n");
-    }
-
-    file.write_all(out.as_bytes())
 }

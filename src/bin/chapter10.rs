@@ -1,25 +1,6 @@
-use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
-use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 use raytracing_in_one_weekend::*;
 use std::{path::Path, sync::Arc};
-
-fn ray_color(world: &HittableList, ray: Ray, depth: usize) -> Color {
-    if depth == 0 {
-        return Color::new(0., 0., 0.);
-    }
-
-    if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
-        if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-            return attenuation * ray_color(&world, scattered, depth - 1);
-        }
-        return Color::new(0., 0., 0.);
-    }
-
-    let unit_direction = ray.direction().unit_vector();
-    let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
-}
 
 fn demo_world(world: &mut HittableList) {
     let ground = Sphere::new(
@@ -140,48 +121,17 @@ fn main() {
         10.,
     );
 
-    // World
-    let mut world = HittableList::new();
-    random_world(&mut world);
-
-    // Progressbar
-    let bar = ProgressBar::new((image_height * image_width).try_into().unwrap());
-    bar.set_style(
-        ProgressStyle::with_template(
-            "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
-        )
-        .unwrap()
-        .progress_chars("#>-"),
+    let mut raytracer = Raytracer::new(
+        camera,
+        image_width,
+        image_height,
+        samples_per_pixel,
+        max_depth,
     );
+    random_world(&mut raytracer.world);
 
-    let mut ppm = vec![Color::new(0., 0., 0.); image_height * image_width];
-    ppm.par_iter_mut().enumerate().for_each(|(index, color)| {
-        let mut rng = rand::thread_rng();
-        let i = index % image_width;
-        let j = image_height - index / image_width - 1;
-
-        let mut pixel_color = Color::new(0., 0., 0.);
-
-        for _ in 0..samples_per_pixel {
-            let u = (i as f64 + rng.gen::<f64>()) / (image_width - 1) as f64;
-            let v = (j as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;
-            pixel_color += ray_color(&world, camera.get_ray(u, v), max_depth);
-        }
-        pixel_color = Color::new(
-            (pixel_color.x() / samples_per_pixel as f64).sqrt(),
-            (pixel_color.y() / samples_per_pixel as f64).sqrt(),
-            (pixel_color.z() / samples_per_pixel as f64).sqrt(),
-        );
-
-        bar.inc(1);
-
-        *color = pixel_color;
-    });
-
-    write_ppm(
-        &Path::new("images/ppm10.ppm"),
-        (image_width, image_height),
-        &ppm,
-    )
-    .unwrap();
+    raytracer
+        .render()
+        .write_ppm(&Path::new("images/ppm10.ppm"))
+        .unwrap();
 }
