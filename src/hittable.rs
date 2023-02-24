@@ -2,12 +2,13 @@ use std::sync::Arc;
 
 use crate::*;
 
+type MaterialArc = Arc<dyn Material + Sync + Send>;
 pub struct HitRecord {
     point: Point3,
     normal: Point3,
     t: f64,
     front_face: bool,
-    material: Arc<dyn Material + Sync + Send>,
+    material: MaterialArc,
 }
 
 impl HitRecord {
@@ -16,7 +17,7 @@ impl HitRecord {
         normal: Point3,
         t: f64,
         front_face: bool,
-        material: Arc<dyn Material + Sync + Send>,
+        material: MaterialArc,
     ) -> Self {
         HitRecord {
             point,
@@ -31,7 +32,7 @@ impl HitRecord {
         point: Point3,
         normal: Point3,
         t: f64,
-        material: Arc<dyn Material + Sync + Send>,
+        material: MaterialArc,
         ray: Ray,
     ) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
@@ -60,7 +61,7 @@ impl HitRecord {
         self.front_face
     }
 
-    pub fn material(&self) -> Arc<dyn Material + Sync + Send> {
+    pub fn material(&self) -> MaterialArc {
         self.material.clone()
     }
 
@@ -79,18 +80,19 @@ pub trait Hittable {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
+type HittableArc = Arc<dyn Hittable + Sync + Send>;
 pub struct HittableList {
-    hittables: Vec<Arc<dyn Hittable + Sync + Send>>,
+    hittables: Vec<HittableArc>,
 }
 
 impl HittableList {
     pub fn new() -> Self {
         Self {
-            hittables: Vec::<Arc<dyn Hittable + Sync + Send>>::new(),
+            hittables: Vec::<HittableArc>::new(),
         }
     }
 
-    pub fn push(&mut self, hittable: Arc<dyn Hittable + Sync + Send>) {
+    pub fn push(&mut self, hittable: HittableArc) {
         self.hittables.push(hittable);
     }
 

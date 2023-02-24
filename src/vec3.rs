@@ -100,7 +100,7 @@ impl Vec3 for Color {
     }
 }
 
-impl ops::Add<Color> for Color {
+impl ops::Add for Color {
     type Output = Self;
 
     fn add(self, rhs: Color) -> Self::Output {
@@ -108,13 +108,13 @@ impl ops::Add<Color> for Color {
     }
 }
 
-impl ops::AddAssign<Color> for Color {
+impl ops::AddAssign for Color {
     fn add_assign(&mut self, rhs: Color) {
         *self = *self + rhs;
     }
 }
 
-impl ops::Sub<Color> for Color {
+impl ops::Sub for Color {
     type Output = Self;
 
     fn sub(self, rhs: Color) -> Self::Output {
@@ -122,7 +122,7 @@ impl ops::Sub<Color> for Color {
     }
 }
 
-impl ops::SubAssign<Color> for Color {
+impl ops::SubAssign for Color {
     fn sub_assign(&mut self, rhs: Color) {
         *self = *self - rhs;
     }
@@ -150,7 +150,7 @@ impl ops::MulAssign<f64> for Color {
     }
 }
 
-impl ops::Mul<Color> for Color {
+impl ops::Mul for Color {
     type Output = Self;
 
     fn mul(self, rhs: Color) -> Self::Output {
@@ -158,7 +158,7 @@ impl ops::Mul<Color> for Color {
     }
 }
 
-impl ops::MulAssign<Color> for Color {
+impl ops::MulAssign for Color {
     fn mul_assign(&mut self, rhs: Color) {
         *self = rhs * *self;
     }
@@ -318,7 +318,7 @@ impl Vec3 for Point3 {
     }
 }
 
-impl ops::Add<Point3> for Point3 {
+impl ops::Add for Point3 {
     type Output = Self;
 
     fn add(self, rhs: Point3) -> Self::Output {
@@ -326,13 +326,13 @@ impl ops::Add<Point3> for Point3 {
     }
 }
 
-impl ops::AddAssign<Point3> for Point3 {
+impl ops::AddAssign for Point3 {
     fn add_assign(&mut self, rhs: Point3) {
         *self = *self + rhs;
     }
 }
 
-impl ops::Sub<Point3> for Point3 {
+impl ops::Sub for Point3 {
     type Output = Self;
 
     fn sub(self, rhs: Point3) -> Self::Output {
@@ -340,7 +340,7 @@ impl ops::Sub<Point3> for Point3 {
     }
 }
 
-impl ops::SubAssign<Point3> for Point3 {
+impl ops::SubAssign for Point3 {
     fn sub_assign(&mut self, rhs: Point3) {
         *self = *self - rhs;
     }
