@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::*;
 
-type MaterialArc = Arc<dyn Material + Sync + Send>;
+type MaterialArc = Arc<dyn Material>;
 pub struct HitRecord {
     point: Point3,
     normal: Point3,

@@ -2,7 +2,7 @@ use rand::Rng;
 
 use crate::*;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
 }
 
