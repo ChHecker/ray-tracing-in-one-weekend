@@ -76,11 +76,11 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-type HittableArc = Arc<dyn Hittable + Sync + Send>;
+type HittableArc = Arc<dyn Hittable>;
 pub struct HittableList {
     hittables: Vec<HittableArc>,
 }
@@ -99,8 +99,10 @@ impl HittableList {
     pub fn clear(&mut self) {
         self.hittables.clear();
     }
+}
 
-    pub fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+impl Hittable for HittableList {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
 
