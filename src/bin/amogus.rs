@@ -1,4 +1,4 @@
-use raytracing_in_one_weekend::{shapes::ZCylinder, *};
+use raytracing_in_one_weekend::{shapes::Cylinder, *};
 use std::{path::Path, sync::Arc};
 
 fn amogus(world: &mut HittableList) {
@@ -9,7 +9,7 @@ fn amogus(world: &mut HittableList) {
     );
     world.push(Arc::new(ground));
 
-    let left_leg = ZCylinder::new(
+    let left_leg = Cylinder::new(
         Point3::new(-1., 0.5, -1.),
         0.5,
         1.,
@@ -17,7 +17,7 @@ fn amogus(world: &mut HittableList) {
     );
     world.push(Arc::new(left_leg));
 
-    let right_leg = ZCylinder::new(
+    let right_leg = Cylinder::new(
         Point3::new(1., 0.5, -1.),
         0.5,
         1.,
@@ -25,7 +25,7 @@ fn amogus(world: &mut HittableList) {
     );
     world.push(Arc::new(right_leg));
 
-    let body = ZCylinder::new(
+    let body = Cylinder::new(
         Point3::new(0., 2.5, -1.),
         1.5,
         3.,
@@ -47,7 +47,7 @@ fn amogus(world: &mut HittableList) {
     );
     world.push(Arc::new(visor));
 
-    let backpack = ZCylinder::new(
+    let backpack = Cylinder::new(
         Point3::new(0., 3., -2.75),
         0.5,
         1.8,

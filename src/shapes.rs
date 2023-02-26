@@ -51,14 +51,14 @@ impl Hittable for Sphere {
     }
 }
 
-pub struct ZCylinder {
+pub struct Cylinder {
     center: Point3,
     radius: f64,
     height: f64,
     material: MaterialArc,
 }
 
-impl ZCylinder {
+impl Cylinder {
     pub fn new(center: Point3, radius: f64, height: f64, material: MaterialArc) -> Self {
         Self {
             center,
@@ -69,7 +69,7 @@ impl ZCylinder {
     }
 }
 
-impl Hittable for ZCylinder {
+impl Hittable for Cylinder {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = Point3::new(
             ray.origin().x() - self.center.x(),
