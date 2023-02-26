@@ -1,4 +1,5 @@
 use crate::*;
+use image::RgbImage;
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use rayon::prelude::*;
@@ -47,7 +48,7 @@ impl Raytracer {
         }
     }
 
-    pub fn render(&self) -> PPM {
+    pub fn render_ppm(&self) -> PPM {
         // Progressbar
         let bar = ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
         bar.set_style(
@@ -87,5 +88,56 @@ impl Raytracer {
             });
 
         PPM::new(colors, self.image_width, self.image_height)
+    }
+
+    pub fn render(&self) -> RgbImage {
+        // Progressbar
+        let bar = ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
+        bar.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
+            )
+            .unwrap()
+            .progress_chars("#>-"),
+        );
+
+        let mut colors = vec![Color::new(0., 0., 0.); self.image_height * self.image_width];
+        colors
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, color)| {
+                let mut rng = rand::thread_rng();
+                let i = index % self.image_width;
+                let j = self.image_height - index / self.image_width - 1;
+
+                let mut pixel_color = Color::new(0., 0., 0.);
+
+                for _ in 0..self.samples_per_pixel {
+                    let u = (i as f64 + rng.gen::<f64>()) / (self.image_width - 1) as f64;
+                    let v = (j as f64 + rng.gen::<f64>()) / (self.image_height - 1) as f64;
+                    pixel_color +=
+                        ray_color(&self.world, self.camera.get_ray(u, v), self.max_depth);
+                }
+                pixel_color = Color::new(
+                    (pixel_color.x() / self.samples_per_pixel as f64).sqrt(),
+                    (pixel_color.y() / self.samples_per_pixel as f64).sqrt(),
+                    (pixel_color.z() / self.samples_per_pixel as f64).sqrt(),
+                );
+
+                bar.inc(1);
+
+                *color = pixel_color;
+            });
+
+        let mut image = RgbImage::new(
+            self.image_width.try_into().unwrap(),
+            self.image_height.try_into().unwrap(),
+        );
+        colors.into_iter().enumerate().for_each(|(index, color)| {
+            let i = index % self.image_width;
+            let j = index / self.image_width;
+            image.put_pixel(i.try_into().unwrap(), j.try_into().unwrap(), color.into());
+        });
+        image
     }
 }
