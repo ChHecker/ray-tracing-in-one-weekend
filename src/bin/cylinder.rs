@@ -1,4 +1,4 @@
-use raytracing_in_one_weekend::{shapes::ZCylinder, *};
+use raytracing_in_one_weekend::{shapes::Cylinder, *};
 use std::{path::Path, sync::Arc};
 
 fn main() {
@@ -33,7 +33,7 @@ fn main() {
         max_depth,
     );
 
-    let cylinder = ZCylinder::new(
+    let cylinder = Cylinder::new(
         Point3::new(-1., 0., -1.),
         0.5,
         0.5,
