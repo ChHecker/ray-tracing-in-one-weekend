@@ -9,11 +9,8 @@ pub mod vec3;
 
 pub use camera::Camera;
 pub use hittable::{HitRecord, Hittable, HittableList};
-pub use materials::{Dielectric, Lambertian, Material, Metal};
-pub use ppm::PPM;
 pub use ray::Ray;
 pub use raytracer::Raytracer;
-pub use shapes::Sphere;
 pub use vec3::{Color, Point3, Vec3};
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {

@@ -52,8 +52,8 @@ fn random_world(world: &mut HittableList) {
     let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
     let sphere3 = Arc::new(Sphere::new_with_time(
         (Point3::new(3., 1., 0.), Point3::new(5., 1., 0.)),
-        (0., 1.),
         1.,
+        (0., 1.),
         material3,
     ));
     world.push(sphere3);

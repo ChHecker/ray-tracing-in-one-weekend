@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{ppm::PPM, *};
 use image::RgbImage;
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
