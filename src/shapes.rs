@@ -1,28 +1,50 @@
 use std::sync::Arc;
 
-use crate::*;
+use crate::{materials::Material, *};
+
+pub trait Position {}
+
+pub struct Stationary {
+    pub position: Point3,
+}
+impl Position for Stationary {}
+
+pub struct Moving {
+    pub position_start: Point3,
+    pub position_end: Point3,
+    pub time_start: f64,
+    pub time_end: f64,
+}
+impl Moving {
+    pub fn position(&self, time: f64) -> Point3 {
+        self.position_start
+            + ((time - self.time_start) / (self.time_end - self.time_start))
+                * (self.position_end - self.position_start)
+    }
+}
+impl Position for Moving {}
 
 type MaterialArc = Arc<dyn Material>;
 
-pub struct Sphere {
-    center: Point3,
+pub struct Sphere<P: Position> {
+    center: P,
     radius: f64,
     material: MaterialArc,
 }
 
-impl Sphere {
+impl Sphere<Stationary> {
     pub fn new(center: Point3, radius: f64, material: MaterialArc) -> Self {
         Self {
-            center,
+            center: Stationary { position: center },
             radius,
             material,
         }
     }
 }
 
-impl Hittable for Sphere {
+impl Hittable for Sphere<Stationary> {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc = ray.origin() - self.center;
+        let oc = ray.origin() - self.center.position;
         let a = ray.direction().norm_sq();
         let b_halves = oc.dot(&ray.direction());
         let c = oc.norm_sq() - self.radius.powi(2);
@@ -43,7 +65,58 @@ impl Hittable for Sphere {
         let point = ray.at(root);
         Some(HitRecord::from_ray(
             point,
-            (point - self.center) / self.radius,
+            (point - self.center.position) / self.radius,
+            root,
+            self.material.clone(),
+            ray,
+        ))
+    }
+}
+
+impl Sphere<Moving> {
+    pub fn new_with_time(
+        center: (Point3, Point3),
+        radius: f64,
+        time: (f64, f64),
+        material: MaterialArc,
+    ) -> Self {
+        Self {
+            center: Moving {
+                position_start: center.0,
+                position_end: center.1,
+                time_start: time.0,
+                time_end: time.1,
+            },
+            radius,
+            material,
+        }
+    }
+}
+
+impl Hittable for Sphere<Moving> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let oc = ray.origin() - self.center.position(ray.time());
+        let a = ray.direction().norm_sq();
+        let b_halves = oc.dot(&ray.direction());
+        let c = oc.norm_sq() - self.radius.powi(2);
+        let discriminant = b_halves.powi(2) - a * c;
+        if discriminant < 0. {
+            return None;
+        }
+        let discriminant_sqrt = discriminant.sqrt();
+
+        let mut root = (-b_halves - discriminant_sqrt) / a;
+        if root < t_min || t_max < root {
+            root = (-b_halves + discriminant_sqrt) / a;
+            if root < t_min || t_max < root {
+                return None;
+            }
+        }
+
+        let point = ray.at(root);
+        Some(HitRecord::from_ray(
+            point,
+            (point - self.center.position(ray.time())) / self.radius,
             root,
             self.material.clone(),
             ray,
