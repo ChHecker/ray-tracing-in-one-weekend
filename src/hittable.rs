@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::*;
+use crate::{materials::Material, *};
 
 type MaterialArc = Arc<dyn Material>;
 pub struct HitRecord {

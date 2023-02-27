@@ -1,4 +1,8 @@
-use raytracing_in_one_weekend::{shapes::Cylinder, *};
+use raytracing_in_one_weekend::{
+    materials::Lambertian,
+    shapes::{Cylinder, Sphere},
+    *,
+};
 use std::{path::Path, sync::Arc};
 
 fn main() {
@@ -21,8 +25,6 @@ fn main() {
         aspect_ratio,
         0.,
         1.,
-        0.,
-        0.,
     );
 
     let mut raytracer = Raytracer::new(

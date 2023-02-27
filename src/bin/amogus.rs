@@ -1,4 +1,4 @@
-use raytracing_in_one_weekend::{shapes::Cylinder, *};
+use raytracing_in_one_weekend::{materials::*, shapes::*, *};
 use std::{path::Path, sync::Arc};
 
 fn amogus(world: &mut HittableList) {
@@ -86,8 +86,6 @@ fn main() {
         aspect_ratio,
         0.,
         1.,
-        0.,
-        0.,
     );
 
     let mut raytracer = Raytracer::new(
