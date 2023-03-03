@@ -16,12 +16,9 @@ impl Ray {
         }
     }
 
-    pub fn new_with_time(origin: Point3, direction: Point3, time: f64) -> Self {
-        Self {
-            origin,
-            direction,
-            time,
-        }
+    pub fn with_time(mut self, time: f64) -> Self {
+        self.time = time;
+        self
     }
 
     pub fn origin(&self) -> Point3 {

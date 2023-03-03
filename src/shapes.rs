@@ -10,16 +10,14 @@ pub struct Stationary {
 impl Position for Stationary {}
 
 pub struct Moving {
-    pub position_start: Point3,
-    pub position_end: Point3,
-    pub time_start: f64,
-    pub time_end: f64,
+    pub position: (Point3, Point3),
+    pub time: (f64, f64),
 }
 impl Moving {
     pub fn position(&self, time: f64) -> Point3 {
-        self.position_start
-            + ((time - self.time_start) / (self.time_end - self.time_start))
-                * (self.position_end - self.position_start)
+        self.position.0
+            + ((time - self.time.0) / (self.time.1 - self.time.0))
+                * (self.position.1 - self.position.0)
     }
 }
 impl Position for Moving {}
@@ -38,6 +36,17 @@ impl Sphere<Stationary> {
             center: Stationary { position: center },
             radius,
             material,
+        }
+    }
+
+    pub fn with_time(self, position_end: Point3, time_start: f64, time_end: f64) -> Sphere<Moving> {
+        Sphere::<Moving> {
+            center: Moving {
+                position: (self.center.position, position_end),
+                time: (time_start, time_end),
+            },
+            radius: self.radius,
+            material: self.material,
         }
     }
 }
@@ -70,26 +79,6 @@ impl Hittable for Sphere<Stationary> {
             self.material.clone(),
             ray,
         ))
-    }
-}
-
-impl Sphere<Moving> {
-    pub fn new_with_time(
-        center: (Point3, Point3),
-        radius: f64,
-        time: (f64, f64),
-        material: MaterialArc,
-    ) -> Self {
-        Self {
-            center: Moving {
-                position_start: center.0,
-                position_end: center.1,
-                time_start: time.0,
-                time_end: time.1,
-            },
-            radius,
-            material,
-        }
     }
 }
 
