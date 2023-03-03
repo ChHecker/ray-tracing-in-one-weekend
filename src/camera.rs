@@ -1,6 +1,5 @@
-use rand::Rng;
-
 use crate::*;
+use rand::Rng;
 
 pub struct Camera {
     origin: Point3,
@@ -69,5 +68,19 @@ impl Camera {
         } else {
             ray
         }
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new(
+            Point3::new(0., 0., 0.),
+            Point3::new(0., 0., -1.),
+            Point3::new(0., 1., 0.),
+            std::f64::consts::FRAC_PI_6,
+            16. / 9.,
+            0.,
+            1.,
+        )
     }
 }
