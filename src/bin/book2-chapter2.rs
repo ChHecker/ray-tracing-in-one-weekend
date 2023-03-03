@@ -6,7 +6,7 @@ fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();
 
     let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let ground_sphere = Arc::new(Sphere::new(
+    let ground_sphere = Arc::new(Sphere::<Stationary>::new(
         Point3::new(0., -1000., 0.),
         1000.,
         ground_material,
@@ -50,12 +50,13 @@ fn random_world(world: &mut HittableList) {
     world.push(sphere2);
 
     let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
-    let sphere3 = Arc::new(Sphere::new_with_time(
-        (Point3::new(3., 1., 0.), Point3::new(5., 1., 0.)),
-        1.,
-        (0., 1.),
-        material3,
-    ));
+    let sphere3 = Arc::new(
+        Sphere::new(Point3::new(3., 1., 0.), 1., material3).with_time(
+            Point3::new(5., 1., 0.),
+            0.,
+            1.,
+        ),
+    );
     world.push(sphere3);
 }
 
