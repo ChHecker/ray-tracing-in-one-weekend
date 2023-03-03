@@ -72,7 +72,7 @@ fn main() {
     let lookfrom = Point3::new(13., 2., 3.);
     let lookat = Point3::new(0., 0., 0.);
     let vup = Point3::new(0., 1., 0.);
-    let camera = Camera::new_with_time(
+    let camera = Camera::new(
         lookfrom,
         lookat,
         vup,
@@ -80,8 +80,8 @@ fn main() {
         aspect_ratio,
         0.1,
         10.,
-        (0., 1.),
-    );
+    )
+    .with_time(0., 1.);
 
     let mut raytracer = Raytracer::new(
         camera,

@@ -59,6 +59,6 @@ fn main() {
 
     raytracer
         .render()
-        .write_ppm(&Path::new("images/cylinder.ppm"))
+        .save(&Path::new("images/cylinder.png"))
         .unwrap();
 }
