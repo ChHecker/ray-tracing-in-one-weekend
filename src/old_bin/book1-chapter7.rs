@@ -4,7 +4,7 @@ use rand::Rng;
 use raytracing_in_one_weekend::*;
 
 pub fn ray_color(world: &HittableList, ray: &Ray) -> Color {
-    if let Some(hit) = world.hit(ray, 0., f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, 0., f32::INFINITY) {
         let normal = hit.normal();
         return 0.5 * Color::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
     }
@@ -17,7 +17,7 @@ fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
     let image_width: usize = 400;
-    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let image_height = (image_width as f32 / aspect_ratio) as usize;
     let samples_per_pixel: usize = 100;
 
     // Camera
@@ -35,11 +35,11 @@ fn main() {
         for i in 0..image_width {
             let mut pixel_color = Color::new(0., 0., 0.);
             for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rng.gen::<f64>()) / (image_width - 1) as f64;
-                let v = (j as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;
+                let u = (i as f32 + rng.gen::<f32>()) / (image_width - 1) as f32;
+                let v = (j as f32 + rng.gen::<f32>()) / (image_height - 1) as f32;
                 pixel_color += ray_color(&world, &camera.get_ray(u, v));
             }
-            pixel_color /= samples_per_pixel as f64;
+            pixel_color /= samples_per_pixel as f32;
             ppm.push(pixel_color);
         }
     }

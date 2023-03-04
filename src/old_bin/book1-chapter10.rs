@@ -52,11 +52,11 @@ fn random_world(world: &mut HittableList) {
 
     for a in -11..11 {
         for b in -11..11 {
-            let choose_material: f64 = rng.gen();
+            let choose_material: f32 = rng.gen();
             let center = Point3::new(
-                a as f64 + 0.9 * rng.gen::<f64>(),
+                a as f32 + 0.9 * rng.gen::<f32>(),
                 0.2,
-                b as f64 + 0.9 * rng.gen::<f64>(),
+                b as f32 + 0.9 * rng.gen::<f32>(),
             );
 
             let sphere_material: Arc<dyn Material + Send + Sync>;
@@ -67,7 +67,7 @@ fn random_world(world: &mut HittableList) {
                     sphere_material = Arc::new(Lambertian::new(albedo));
                 } else if choose_material < 0.9 {
                     let albedo = Color::random_in_range(0.5, 1.);
-                    let fuzz = 0.5 * rng.gen::<f64>();
+                    let fuzz = 0.5 * rng.gen::<f32>();
                     sphere_material = Arc::new(Metal::new(albedo, fuzz));
                 } else {
                     sphere_material = Arc::new(Dielectric::new(1.5));
@@ -95,7 +95,7 @@ fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
     let image_width: usize = 1920;
-    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let image_height = (image_width as f32 / aspect_ratio) as usize;
     let samples_per_pixel: usize = 500;
     let max_depth = 100;
 
@@ -107,7 +107,7 @@ fn main() {
         lookfrom,
         lookat,
         vup,
-        std::f64::consts::FRAC_PI_6,
+        std::f32::consts::FRAC_PI_6,
         aspect_ratio,
         0.1,
         10.,

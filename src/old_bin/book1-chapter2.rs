@@ -5,8 +5,8 @@ fn main() {
     let mut ppm = Vec::<Color>::new();
     for j in (0..256).rev() {
         for i in 0..256 {
-            let r = i as f64 / 255.;
-            let g = j as f64 / 255.;
+            let r = i as f32 / 255.;
+            let g = j as f32 / 255.;
             let b = 0.25;
             ppm.push(Color::new(r, g, b));
         }

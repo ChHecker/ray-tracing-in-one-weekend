@@ -9,8 +9,8 @@ pub struct Camera {
     u: Point3,
     v: Point3,
     w: Point3,
-    lens_radius: f64,
-    time: Option<(f64, f64)>,
+    lens_radius: f32,
+    time: Option<(f32, f32)>,
 }
 
 impl Camera {
@@ -18,10 +18,10 @@ impl Camera {
         lookfrom: Point3,
         lookat: Point3,
         vup: Point3,
-        vertical_fov: f64,
-        aspect_ratio: f64,
-        aperture: f64,
-        focus_distance: f64,
+        vertical_fov: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_distance: f32,
     ) -> Self {
         let h = (vertical_fov / 2.).tan();
         let viewport_height = 2. * h;
@@ -48,12 +48,12 @@ impl Camera {
         }
     }
 
-    pub fn with_time(mut self, time_start: f64, time_end: f64) -> Self {
+    pub fn with_time(mut self, time_start: f32, time_end: f32) -> Self {
         self.time = Some((time_start, time_end));
         self
     }
 
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let mut rng = rand::thread_rng();
 
         let random_disk = self.lens_radius * Point3::random_in_unit_disk();
@@ -64,7 +64,7 @@ impl Camera {
             self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin - offset,
         );
         if let Some((time1, time2)) = self.time {
-            ray.with_time(time1 + rng.gen::<f64>() * (time2 - time1))
+            ray.with_time(time1 + rng.gen::<f32>() * (time2 - time1))
         } else {
             ray
         }
@@ -77,7 +77,7 @@ impl Default for Camera {
             Point3::new(0., 0., 0.),
             Point3::new(0., 0., -1.),
             Point3::new(0., 1., 0.),
-            std::f64::consts::FRAC_PI_6,
+            std::f32::consts::FRAC_PI_6,
             16. / 9.,
             0.,
             1.,

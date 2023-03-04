@@ -9,7 +9,7 @@ fn ray_color(world: &HittableList, ray: Ray, depth: usize) -> Color {
         return Color::new(0., 0., 0.);
     }
 
-    if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
         if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
             return attenuation * ray_color(&world, scattered, depth - 1);
         }
@@ -71,15 +71,15 @@ impl Raytracer {
                 let mut pixel_color = Color::new(0., 0., 0.);
 
                 for _ in 0..self.samples_per_pixel {
-                    let u = (i as f64 + rng.gen::<f64>()) / (self.image_width - 1) as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / (self.image_height - 1) as f64;
+                    let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
+                    let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
                     pixel_color +=
                         ray_color(&self.world, self.camera.get_ray(u, v), self.max_depth);
                 }
                 pixel_color = Color::new(
-                    (pixel_color.x() / self.samples_per_pixel as f64).sqrt(),
-                    (pixel_color.y() / self.samples_per_pixel as f64).sqrt(),
-                    (pixel_color.z() / self.samples_per_pixel as f64).sqrt(),
+                    (pixel_color.x() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.y() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.z() / self.samples_per_pixel as f32).sqrt(),
                 );
 
                 bar.inc(1);
@@ -113,15 +113,15 @@ impl Raytracer {
                 let mut pixel_color = Color::new(0., 0., 0.);
 
                 for _ in 0..self.samples_per_pixel {
-                    let u = (i as f64 + rng.gen::<f64>()) / (self.image_width - 1) as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / (self.image_height - 1) as f64;
+                    let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
+                    let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
                     pixel_color +=
                         ray_color(&self.world, self.camera.get_ray(u, v), self.max_depth);
                 }
                 pixel_color = Color::new(
-                    (pixel_color.x() / self.samples_per_pixel as f64).sqrt(),
-                    (pixel_color.y() / self.samples_per_pixel as f64).sqrt(),
-                    (pixel_color.z() / self.samples_per_pixel as f64).sqrt(),
+                    (pixel_color.x() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.y() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.z() / self.samples_per_pixel as f32).sqrt(),
                 );
 
                 bar.inc(1);

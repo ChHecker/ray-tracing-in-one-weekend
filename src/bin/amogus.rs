@@ -70,7 +70,7 @@ fn main() {
     // Image
     let aspect_ratio = 16. / 9.;
     let image_width: usize = 800;
-    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let image_height = (image_width as f32 / aspect_ratio) as usize;
     let samples_per_pixel: usize = 100;
     let max_depth = 10;
 
@@ -82,7 +82,7 @@ fn main() {
         lookfrom,
         lookat,
         vup,
-        std::f64::consts::FRAC_PI_4,
+        std::f32::consts::FRAC_PI_4,
         aspect_ratio,
         0.,
         1.,

@@ -13,7 +13,7 @@ pub use ray::Ray;
 pub use raytracer::Raytracer;
 pub use vec3::{Color, Point3, Vec3};
 
-pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
+pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
     if x < min {
         return min;
     }

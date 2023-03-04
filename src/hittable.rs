@@ -6,7 +6,7 @@ type MaterialArc = Arc<dyn Material>;
 pub struct HitRecord {
     point: Point3,
     normal: Point3,
-    t: f64,
+    t: f32,
     front_face: bool,
     material: MaterialArc,
 }
@@ -15,7 +15,7 @@ impl HitRecord {
     pub fn new(
         point: Point3,
         normal: Point3,
-        t: f64,
+        t: f32,
         front_face: bool,
         material: MaterialArc,
     ) -> Self {
@@ -31,7 +31,7 @@ impl HitRecord {
     pub fn from_ray(
         point: Point3,
         normal: Point3,
-        t: f64,
+        t: f32,
         material: MaterialArc,
         ray: Ray,
     ) -> Self {
@@ -53,7 +53,7 @@ impl HitRecord {
         self.normal
     }
 
-    pub fn t(&self) -> f64 {
+    pub fn t(&self) -> f32 {
         self.t
     }
 
@@ -77,7 +77,7 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
 
 type HittableArc = Arc<dyn Hittable>;
@@ -102,7 +102,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
 
