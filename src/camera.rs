@@ -2,22 +2,22 @@ use crate::*;
 use rand::Rng;
 
 pub struct Camera {
-    origin: Point3,
-    lower_left_corner: Point3,
-    horizontal: Point3,
-    vertical: Point3,
-    u: Point3,
-    v: Point3,
-    w: Point3,
+    origin: Point,
+    lower_left_corner: Point,
+    horizontal: Point,
+    vertical: Point,
+    u: Point,
+    v: Point,
+    w: Point,
     lens_radius: f32,
     time: Option<(f32, f32)>,
 }
 
 impl Camera {
     pub fn new(
-        lookfrom: Point3,
-        lookat: Point3,
-        vup: Point3,
+        lookfrom: Point,
+        lookat: Point,
+        vup: Point,
         vertical_fov: f32,
         aspect_ratio: f32,
         aperture: f32,
@@ -56,7 +56,7 @@ impl Camera {
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let mut rng = rand::thread_rng();
 
-        let random_disk = self.lens_radius * Point3::random_in_unit_disk();
+        let random_disk = self.lens_radius * Point::random_in_unit_disk();
         let offset = self.u * random_disk.x() + self.v * random_disk.y();
 
         let ray = Ray::new(
@@ -74,9 +74,9 @@ impl Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self::new(
-            Point3::new(0., 0., 0.),
-            Point3::new(0., 0., -1.),
-            Point3::new(0., 1., 0.),
+            point!(0., 0., 0.),
+            point!(0., 0., -1.),
+            point!(0., 1., 0.),
             std::f32::consts::FRAC_PI_6,
             16. / 9.,
             0.,

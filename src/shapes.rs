@@ -5,16 +5,16 @@ use crate::{materials::Material, *};
 pub trait Position {}
 
 pub struct Stationary {
-    pub position: Point3,
+    pub position: Point,
 }
 impl Position for Stationary {}
 
 pub struct Moving {
-    pub position: (Point3, Point3),
+    pub position: (Point, Point),
     pub time: (f32, f32),
 }
 impl Moving {
-    pub fn position(&self, time: f32) -> Point3 {
+    pub fn position(&self, time: f32) -> Point {
         self.position.0
             + ((time - self.time.0) / (self.time.1 - self.time.0))
                 * (self.position.1 - self.position.0)
@@ -31,7 +31,7 @@ pub struct Sphere<P: Position> {
 }
 
 impl Sphere<Stationary> {
-    pub fn new(center: Point3, radius: f32, material: MaterialArc) -> Self {
+    pub fn new(center: Point, radius: f32, material: MaterialArc) -> Self {
         Self {
             center: Stationary { position: center },
             radius,
@@ -39,7 +39,7 @@ impl Sphere<Stationary> {
         }
     }
 
-    pub fn with_time(self, position_end: Point3, time_start: f32, time_end: f32) -> Sphere<Moving> {
+    pub fn with_time(self, position_end: Point, time_start: f32, time_end: f32) -> Sphere<Moving> {
         Sphere::<Moving> {
             center: Moving {
                 position: (self.center.position, position_end),
@@ -114,14 +114,14 @@ impl Hittable for Sphere<Moving> {
 }
 
 pub struct Cylinder {
-    center: Point3,
+    center: Point,
     radius: f32,
     height: f32,
     material: MaterialArc,
 }
 
 impl Cylinder {
-    pub fn new(center: Point3, radius: f32, height: f32, material: MaterialArc) -> Self {
+    pub fn new(center: Point, radius: f32, height: f32, material: MaterialArc) -> Self {
         Self {
             center,
             radius,
@@ -133,7 +133,7 @@ impl Cylinder {
 
 impl Hittable for Cylinder {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let oc = Point3::new(
+        let oc = point!(
             ray.origin().x() - self.center.x(),
             0.,
             ray.origin().z() - self.center.z(),
@@ -159,7 +159,7 @@ impl Hittable for Cylinder {
         let upper_bound = self.center.y() + self.height / 2.;
         let lower_bound = self.center.y() - self.height / 2.;
 
-        let mut point: Point3;
+        let mut point: Point;
         let mut root: f32;
 
         if point1.y() > upper_bound {
@@ -203,7 +203,7 @@ impl Hittable for Cylinder {
         }
 
         let mut normal = (point - self.center) / self.radius;
-        normal = Point3::new(normal.x(), 0., normal.z());
+        normal = point!(normal.x(), 0., normal.z());
 
         Some(HitRecord::from_ray(
             point,

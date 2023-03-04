@@ -1,12 +1,12 @@
 use indicatif::ProgressBar;
 use rand::Rng;
+use ray_tracing_in_one_weekend::*;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
-use raytracing_in_one_weekend::*;
 use std::{path::Path, sync::Arc};
 
 pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
     if depth == 0 {
-        return Color::new(0., 0., 0.);
+        return color!(0., 0., 0.);
     }
 
     if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
@@ -20,7 +20,7 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
     }
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
+    (1.0 - t) * color!(1., 1., 1.) + t * color!(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -42,20 +42,20 @@ fn main() {
     // Progressbar
     let bar = ProgressBar::new((image_height * image_width).try_into().unwrap());
 
-    let mut ppm = vec![Color::new(0., 0., 0.); image_height * image_width];
+    let mut ppm = vec![color!(0., 0., 0.); image_height * image_width];
     ppm.par_iter_mut().enumerate().for_each(|(index, color)| {
         let mut rng = rand::thread_rng();
         let i = index % image_width;
         let j = image_height - index / image_width - 1;
 
-        let mut pixel_color = Color::new(0., 0., 0.);
+        let mut pixel_color = color!(0., 0., 0.);
 
         for _ in 0..samples_per_pixel {
             let u = (i as f32 + rng.gen::<f32>()) / (image_width - 1) as f32;
             let v = (j as f32 + rng.gen::<f32>()) / (image_height - 1) as f32;
             pixel_color += ray_color(&world, &camera.get_ray(u, v), max_depth);
         }
-        pixel_color = Color::new(
+        pixel_color = color!(
             (pixel_color.x() / samples_per_pixel as f32).sqrt(),
             (pixel_color.y() / samples_per_pixel as f32).sqrt(),
             (pixel_color.z() / samples_per_pixel as f32).sqrt(),
