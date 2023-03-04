@@ -75,6 +75,7 @@ pub trait Hittable: Send + Sync {
 }
 
 type HittableArc = Arc<dyn Hittable>;
+#[derive(Clone, Default)]
 pub struct HittableList {
     hittables: Vec<HittableArc>,
 }

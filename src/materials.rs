@@ -89,13 +89,12 @@ impl Material for Dielectric {
         let sin_theta = (1. - cos_theta.powi(2)).sqrt();
 
         let cannot_refrect = refraction_ratio * sin_theta > 1.;
-        let direction: Point;
-
-        if cannot_refrect || Dielectric::reflectance(cos_theta, refraction_ratio) > rng.gen() {
-            direction = unit_direction.reflect(&hit.normal());
-        } else {
-            direction = unit_direction.refract(&hit.normal(), refraction_ratio);
-        }
+        let direction =
+            if cannot_refrect || Dielectric::reflectance(cos_theta, refraction_ratio) > rng.gen() {
+                unit_direction.reflect(&hit.normal())
+            } else {
+                unit_direction.refract(&hit.normal(), refraction_ratio)
+            };
 
         let scattered = Ray::new(hit.point(), direction).with_time(ray.time());
         Some((scattered, color!(1., 1., 1.)))

@@ -11,7 +11,7 @@ fn ray_color(world: &HittableList, ray: Ray, depth: usize) -> Color {
 
     if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
         if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-            return attenuation * ray_color(&world, scattered, depth - 1);
+            return attenuation * ray_color(world, scattered, depth - 1);
         }
         return color!(0., 0., 0.);
     }
