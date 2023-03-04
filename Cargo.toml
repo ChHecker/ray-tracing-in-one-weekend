@@ -1,7 +1,7 @@
 [package]
-name = "raytracing-in-one-weekend"
-author = "Christopher Hecker"
-description = "Implementation of Raytracing in One Weekend by Peter Shirley"
+name = "ray-tracing-in-one-weekend"
+authors = ["Christopher Hecker"]
+description = "Implementation of Ray Tracing in One Weekend by Peter Shirley"
 version = "0.1.4"
 edition = "2021"
 
