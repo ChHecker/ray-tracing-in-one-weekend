@@ -4,8 +4,8 @@ use crate::{materials::Material, *};
 
 type MaterialArc = Arc<dyn Material>;
 pub struct HitRecord {
-    point: Point3,
-    normal: Point3,
+    point: Point,
+    normal: Point,
     t: f32,
     front_face: bool,
     material: MaterialArc,
@@ -13,8 +13,8 @@ pub struct HitRecord {
 
 impl HitRecord {
     pub fn new(
-        point: Point3,
-        normal: Point3,
+        point: Point,
+        normal: Point,
         t: f32,
         front_face: bool,
         material: MaterialArc,
@@ -28,13 +28,7 @@ impl HitRecord {
         }
     }
 
-    pub fn from_ray(
-        point: Point3,
-        normal: Point3,
-        t: f32,
-        material: MaterialArc,
-        ray: Ray,
-    ) -> Self {
+    pub fn from_ray(point: Point, normal: Point, t: f32, material: MaterialArc, ray: Ray) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
         HitRecord {
             point,
@@ -45,11 +39,11 @@ impl HitRecord {
         }
     }
 
-    pub fn point(&self) -> Point3 {
+    pub fn point(&self) -> Point {
         self.point
     }
 
-    pub fn normal(&self) -> Point3 {
+    pub fn normal(&self) -> Point {
         self.normal
     }
 
@@ -65,7 +59,7 @@ impl HitRecord {
         self.material.clone()
     }
 
-    fn face_normal(ray: Ray, outward_normal: Point3) -> (bool, Point3) {
+    fn face_normal(ray: Ray, outward_normal: Point) -> (bool, Point) {
         let front_face = ray.direction().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal

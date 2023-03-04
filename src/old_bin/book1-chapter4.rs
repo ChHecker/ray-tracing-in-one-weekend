@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use raytracing_in_one_weekend::*;
+use ray_tracing_in_one_weekend::*;
 
 pub fn ray_color(ray: &Ray) -> Color {
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
+    (1.0 - t) * color!(1., 1., 1.) + t * color!(0.5, 0.7, 1.0)
 }
 
 fn main() {

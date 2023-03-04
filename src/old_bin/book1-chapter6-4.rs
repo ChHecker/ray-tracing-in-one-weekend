@@ -1,15 +1,15 @@
 use std::{path::Path, rc::Rc};
 
-use raytracing_in_one_weekend::*;
+use ray_tracing_in_one_weekend::*;
 
 pub fn ray_color(world: &HittableList, ray: &Ray) -> Color {
     if let Some(hit) = world.hit(ray, 0., f32::INFINITY) {
         let normal = hit.normal();
-        return 0.5 * Color::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
+        return 0.5 * color!(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
     }
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * Color::new(1., 1., 1.) + t * Color::new(0.5, 0.7, 1.0)
+    (1.0 - t) * color!(1., 1., 1.) + t * color!(0.5, 0.7, 1.0)
 }
 
 fn main() {
