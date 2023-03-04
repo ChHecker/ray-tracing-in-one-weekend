@@ -9,7 +9,7 @@ pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
         return Color::new(0., 0., 0.);
     }
 
-    if let Some(hit) = world.hit(ray, 0.001, f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
         if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
             return attenuation * ray_color(&world, &scattered, depth - 1);
         }
@@ -25,7 +25,7 @@ fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
     let image_width: usize = 1000;
-    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let image_height = (image_width as f32 / aspect_ratio) as usize;
     let samples_per_pixel: usize = 100;
     let max_depth = 100;
 
@@ -82,14 +82,14 @@ fn main() {
         let mut pixel_color = Color::new(0., 0., 0.);
 
         for _ in 0..samples_per_pixel {
-            let u = (i as f64 + rng.gen::<f64>()) / (image_width - 1) as f64;
-            let v = (j as f64 + rng.gen::<f64>()) / (image_height - 1) as f64;
+            let u = (i as f32 + rng.gen::<f32>()) / (image_width - 1) as f32;
+            let v = (j as f32 + rng.gen::<f32>()) / (image_height - 1) as f32;
             pixel_color += ray_color(&world, &camera.get_ray(u, v), max_depth);
         }
         pixel_color = Color::new(
-            (pixel_color.x() / samples_per_pixel as f64).sqrt(),
-            (pixel_color.y() / samples_per_pixel as f64).sqrt(),
-            (pixel_color.z() / samples_per_pixel as f64).sqrt(),
+            (pixel_color.x() / samples_per_pixel as f32).sqrt(),
+            (pixel_color.y() / samples_per_pixel as f32).sqrt(),
+            (pixel_color.z() / samples_per_pixel as f32).sqrt(),
         );
 
         bar.inc(1);

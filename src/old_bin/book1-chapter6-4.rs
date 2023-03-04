@@ -3,7 +3,7 @@ use std::{path::Path, rc::Rc};
 use raytracing_in_one_weekend::*;
 
 pub fn ray_color(world: &HittableList, ray: &Ray) -> Color {
-    if let Some(hit) = world.hit(ray, 0., f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, 0., f32::INFINITY) {
         let normal = hit.normal();
         return 0.5 * Color::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
     }
@@ -16,7 +16,7 @@ fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
     let image_width: usize = 400;
-    let image_height = (image_width as f64 / aspect_ratio) as usize;
+    let image_height = (image_width as f32 / aspect_ratio) as usize;
 
     // Camera
     let viewport_height = 2.;
@@ -37,8 +37,8 @@ fn main() {
     let mut ppm = Vec::<Color>::new();
     for j in (0..image_height).rev() {
         for i in 0..image_width {
-            let u = i as f64 / (image_width - 1) as f64;
-            let v = j as f64 / (image_height - 1) as f64;
+            let u = i as f32 / (image_width - 1) as f32;
+            let v = j as f32 / (image_height - 1) as f32;
             let ray = Ray::new(
                 origin,
                 lower_left_corner + u * horizontal + v * vertical - origin,

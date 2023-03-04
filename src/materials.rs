@@ -31,11 +31,11 @@ impl Material for Lambertian {
 
 pub struct Metal {
     albedo: Color,
-    fuzz: f64,
+    fuzz: f32,
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f64) -> Self {
+    pub fn new(albedo: Color, fuzz: f32) -> Self {
         let fuzz = if fuzz < 1. { fuzz } else { 1. };
         Self { albedo, fuzz }
     }
@@ -57,17 +57,17 @@ impl Material for Metal {
 }
 
 pub struct Dielectric {
-    index_of_refraction: f64,
+    index_of_refraction: f32,
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: f64) -> Self {
+    pub fn new(index_of_refraction: f32) -> Self {
         Self {
             index_of_refraction,
         }
     }
 
-    fn reflectance(cos: f64, refraction_ratio: f64) -> f64 {
+    fn reflectance(cos: f32, refraction_ratio: f32) -> f32 {
         let mut r0 = (1. - refraction_ratio) / (1. + refraction_ratio);
         r0 *= r0;
         r0 + (1. - r0) * (1. - cos).powi(5)
@@ -85,7 +85,7 @@ impl Material for Dielectric {
         };
 
         let unit_direction = ray.direction().unit_vector();
-        let cos_theta = f64::min(-unit_direction.dot(&hit.normal()), 1.);
+        let cos_theta = f32::min(-unit_direction.dot(&hit.normal()), 1.);
         let sin_theta = (1. - cos_theta.powi(2)).sqrt();
 
         let cannot_refrect = refraction_ratio * sin_theta > 1.;

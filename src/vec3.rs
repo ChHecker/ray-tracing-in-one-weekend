@@ -5,33 +5,33 @@ use std::{fmt, ops};
 
 /// Three-dimensional Cartesian vector
 pub trait Vec3: Copy + Clone + fmt::Debug + PartialEq {
-    fn new(x: f64, y: f64, z: f64) -> Self;
+    fn new(x: f32, y: f32, z: f32) -> Self;
 
     fn random() -> Self
     where
         Self: Sized,
     {
         let mut rng = rand::thread_rng();
-        Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>())
+        Self::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
     }
 
-    fn random_in_range(min: f64, max: f64) -> Self
+    fn random_in_range(min: f32, max: f32) -> Self
     where
         Self: Sized,
     {
         let mut rng = rand::thread_rng();
         Self::new(
-            min + rng.gen::<f64>() * (max - min),
-            min + rng.gen::<f64>() * (max - min),
-            min + rng.gen::<f64>() * (max - min),
+            min + rng.gen::<f32>() * (max - min),
+            min + rng.gen::<f32>() * (max - min),
+            min + rng.gen::<f32>() * (max - min),
         )
     }
 
-    fn x(&self) -> f64;
-    fn y(&self) -> f64;
-    fn z(&self) -> f64;
+    fn x(&self) -> f32;
+    fn y(&self) -> f32;
+    fn z(&self) -> f32;
 
-    fn dot(&self, rhs: &Self) -> f64 {
+    fn dot(&self, rhs: &Self) -> f32 {
         self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
     }
 
@@ -46,11 +46,11 @@ pub trait Vec3: Copy + Clone + fmt::Debug + PartialEq {
         )
     }
 
-    fn norm(&self) -> f64 {
-        f64::sqrt(self.dot(self))
+    fn norm(&self) -> f32 {
+        f32::sqrt(self.dot(self))
     }
 
-    fn norm_sq(&self) -> f64 {
+    fn norm_sq(&self) -> f32 {
         self.dot(self)
     }
 
@@ -70,7 +70,7 @@ pub trait Vec3: Copy + Clone + fmt::Debug + PartialEq {
 
 /// Color in RGB between 0 and 1
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Color(f64, f64, f64);
+pub struct Color(f32, f32, f32);
 
 impl Color {
     pub fn to_color_str(&self) -> String {
@@ -84,19 +84,19 @@ impl Color {
 }
 
 impl Vec3 for Color {
-    fn new(r: f64, g: f64, b: f64) -> Self {
+    fn new(r: f32, g: f32, b: f32) -> Self {
         Color(r, g, b)
     }
 
-    fn x(&self) -> f64 {
+    fn x(&self) -> f32 {
         self.0
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> f32 {
         self.1
     }
 
-    fn z(&self) -> f64 {
+    fn z(&self) -> f32 {
         self.2
     }
 }
@@ -139,15 +139,15 @@ impl ops::SubAssign for Color {
     }
 }
 
-impl ops::Mul<f64> for Color {
+impl ops::Mul<f32> for Color {
     type Output = Self;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         Color(rhs * self.0, rhs * self.1, rhs * self.2)
     }
 }
 
-impl ops::Mul<Color> for f64 {
+impl ops::Mul<Color> for f32 {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {
@@ -155,8 +155,8 @@ impl ops::Mul<Color> for f64 {
     }
 }
 
-impl ops::MulAssign<f64> for Color {
-    fn mul_assign(&mut self, rhs: f64) {
+impl ops::MulAssign<f32> for Color {
+    fn mul_assign(&mut self, rhs: f32) {
         *self = rhs * *self;
     }
 }
@@ -175,16 +175,16 @@ impl ops::MulAssign for Color {
     }
 }
 
-impl ops::Div<f64> for Color {
+impl ops::Div<f32> for Color {
     type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: f32) -> Self::Output {
         Color(self.0 / rhs, self.1 / rhs, self.2 / rhs)
     }
 }
 
-impl ops::DivAssign<f64> for Color {
-    fn div_assign(&mut self, rhs: f64) {
+impl ops::DivAssign<f32> for Color {
+    fn div_assign(&mut self, rhs: f32) {
         *self = *self / rhs;
     }
 }
@@ -198,7 +198,7 @@ impl ops::Neg for Color {
 }
 
 impl ops::Index<u8> for Color {
-    type Output = f64;
+    type Output = f32;
 
     fn index(&self, index: u8) -> &Self::Output {
         match index {
@@ -216,7 +216,7 @@ pub struct Color3Iter {
 }
 
 impl IntoIterator for Color {
-    type Item = f64;
+    type Item = f32;
     type IntoIter = Color3Iter;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -228,7 +228,7 @@ impl IntoIterator for Color {
 }
 
 impl Iterator for Color3Iter {
-    type Item = f64;
+    type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = match self.index {
@@ -242,8 +242,8 @@ impl Iterator for Color3Iter {
     }
 }
 
-impl FromIterator<f64> for Color {
-    fn from_iter<T: IntoIterator<Item = f64>>(iter: T) -> Self {
+impl FromIterator<f32> for Color {
+    fn from_iter<T: IntoIterator<Item = f32>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
         Self(
             iter.next().unwrap(),
@@ -255,7 +255,7 @@ impl FromIterator<f64> for Color {
 
 /// Vector in 3D space
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Point3(f64, f64, f64);
+pub struct Point3(f32, f32, f32);
 
 impl Point3 {
     pub fn to_color_str(&self) -> String {
@@ -270,7 +270,7 @@ impl Point3 {
     pub fn random_in_unit_sphere() -> Self {
         let mut rng = rand::thread_rng();
         loop {
-            let rand = Self::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>());
+            let rand = Self::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
             if rand.norm_sq() < 1. {
                 return rand;
             }
@@ -292,7 +292,7 @@ impl Point3 {
     pub fn random_in_unit_disk() -> Self {
         let mut rng = rand::thread_rng();
         loop {
-            let rand = Point3::new(-1. + rng.gen::<f64>() * 2., -1. + rng.gen::<f64>() * 2., 0.);
+            let rand = Point3::new(-1. + rng.gen::<f32>() * 2., -1. + rng.gen::<f32>() * 2., 0.);
             if rand.norm_sq() < 1. {
                 return rand;
             }
@@ -303,8 +303,8 @@ impl Point3 {
         *self - 2. * self.dot(normal) * *normal
     }
 
-    pub fn refract(&self, normal: &Self, etai_over_etat: f64) -> Self {
-        let cos_theta = f64::min(-self.dot(normal), 1.);
+    pub fn refract(&self, normal: &Self, etai_over_etat: f32) -> Self {
+        let cos_theta = f32::min(-self.dot(normal), 1.);
         let refracted_out_perp = etai_over_etat * (*self + cos_theta * *normal);
         let refracted_out_parallel = -(1. - refracted_out_perp.norm_sq()).abs().sqrt() * *normal;
         refracted_out_perp + refracted_out_parallel
@@ -312,19 +312,19 @@ impl Point3 {
 }
 
 impl Vec3 for Point3 {
-    fn new(r: f64, g: f64, b: f64) -> Self {
+    fn new(r: f32, g: f32, b: f32) -> Self {
         Point3(r, g, b)
     }
 
-    fn x(&self) -> f64 {
+    fn x(&self) -> f32 {
         self.0
     }
 
-    fn y(&self) -> f64 {
+    fn y(&self) -> f32 {
         self.1
     }
 
-    fn z(&self) -> f64 {
+    fn z(&self) -> f32 {
         self.2
     }
 }
@@ -357,15 +357,15 @@ impl ops::SubAssign for Point3 {
     }
 }
 
-impl ops::Mul<f64> for Point3 {
+impl ops::Mul<f32> for Point3 {
     type Output = Self;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: f32) -> Self::Output {
         Point3(rhs * self.0, rhs * self.1, rhs * self.2)
     }
 }
 
-impl ops::Mul<Point3> for f64 {
+impl ops::Mul<Point3> for f32 {
     type Output = Point3;
 
     fn mul(self, rhs: Point3) -> Self::Output {
@@ -373,22 +373,22 @@ impl ops::Mul<Point3> for f64 {
     }
 }
 
-impl ops::MulAssign<f64> for Point3 {
-    fn mul_assign(&mut self, rhs: f64) {
+impl ops::MulAssign<f32> for Point3 {
+    fn mul_assign(&mut self, rhs: f32) {
         *self = rhs * *self;
     }
 }
 
-impl ops::Div<f64> for Point3 {
+impl ops::Div<f32> for Point3 {
     type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: f32) -> Self::Output {
         Point3(self.0 / rhs, self.1 / rhs, self.2 / rhs)
     }
 }
 
-impl ops::DivAssign<f64> for Point3 {
-    fn div_assign(&mut self, rhs: f64) {
+impl ops::DivAssign<f32> for Point3 {
+    fn div_assign(&mut self, rhs: f32) {
         *self = *self / rhs;
     }
 }
@@ -402,7 +402,7 @@ impl ops::Neg for Point3 {
 }
 
 impl ops::Index<u8> for Point3 {
-    type Output = f64;
+    type Output = f32;
 
     fn index(&self, index: u8) -> &Self::Output {
         match index {
@@ -420,7 +420,7 @@ pub struct Point3Iter {
 }
 
 impl IntoIterator for Point3 {
-    type Item = f64;
+    type Item = f32;
     type IntoIter = Point3Iter;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -432,7 +432,7 @@ impl IntoIterator for Point3 {
 }
 
 impl Iterator for Point3Iter {
-    type Item = f64;
+    type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
         let result = match self.index {
@@ -494,13 +494,13 @@ mod tests {
     #[test]
     fn abs() {
         let v = Color(1., 2., 3.);
-        assert_eq!(v.norm(), f64::sqrt(14.))
+        assert_eq!(v.norm(), f32::sqrt(14.))
     }
 
     #[test]
     fn unit_vector() {
         let v = Color(1., 2., 3.);
-        assert_eq!(v.unit_vector(), v / f64::sqrt(14.))
+        assert_eq!(v.unit_vector(), v / f32::sqrt(14.))
     }
 
     #[test]
