@@ -115,12 +115,12 @@ impl Vec3 for Color {
     }
 }
 
-impl Into<Rgb<u8>> for Color {
-    fn into(self) -> Rgb<u8> {
+impl From<Color> for Rgb<u8> {
+    fn from(color: Color) -> Rgb<u8> {
         Rgb([
-            (256. * clamp(self.x(), 0., 0.999)) as u8,
-            (256. * clamp(self.y(), 0., 0.999)) as u8,
-            (256. * clamp(self.z(), 0., 0.999)) as u8,
+            (256. * clamp(color.x(), 0., 0.999)) as u8,
+            (256. * clamp(color.y(), 0., 0.999)) as u8,
+            (256. * clamp(color.z(), 0., 0.999)) as u8,
         ])
     }
 }
@@ -297,7 +297,7 @@ impl Point {
 
     pub fn random_in_hemisphere(normal: &Self) -> Self {
         let rand = Self::random_in_unit_sphere();
-        if rand.dot(&normal) > 0. {
+        if rand.dot(normal) > 0. {
             return rand;
         }
         -rand

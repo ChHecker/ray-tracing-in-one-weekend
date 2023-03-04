@@ -14,12 +14,12 @@ pub use ray::Ray;
 pub use raytracer::Raytracer;
 pub use vec3::{Color, Point, Vec3};
 
-pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
+pub fn clamp<T: PartialOrd>(x: T, min: T, max: T) -> T {
     if x < min {
         return min;
     }
     if x > max {
         return max;
     }
-    return x;
+    x
 }

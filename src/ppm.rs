@@ -45,7 +45,7 @@ impl PPM {
         ));
         for (_, color) in self.colors.iter().enumerate() {
             out.push_str(&color.to_color_str());
-            out.push_str(&"\n");
+            out.push('\n');
         }
 
         file.write_all(out.as_bytes())
