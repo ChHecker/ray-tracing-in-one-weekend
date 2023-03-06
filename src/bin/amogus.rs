@@ -65,9 +65,9 @@ fn amogus(world: &mut HittableList) {
 fn main() {
     // Image
     let aspect_ratio = 16. / 9.;
-    let image_width: usize = 800;
-    let image_height = (image_width as f32 / aspect_ratio) as usize;
-    let samples_per_pixel: usize = 100;
+    let image_width: u16 = 800;
+    let image_height = (image_width as f32 / aspect_ratio) as u16;
+    let samples_per_pixel: u16 = 100;
     let max_depth = 10;
 
     // Camera

@@ -4,7 +4,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use rayon::prelude::*;
 
-fn ray_color(world: &HittableList, ray: Ray, depth: usize) -> Color {
+fn ray_color(world: &HittableList, ray: Ray, depth: u16) -> Color {
     if depth == 0 {
         return color!(0., 0., 0.);
     }
@@ -24,19 +24,19 @@ fn ray_color(world: &HittableList, ray: Ray, depth: usize) -> Color {
 pub struct Raytracer {
     pub world: HittableList,
     camera: Camera,
-    image_width: usize,
-    image_height: usize,
-    samples_per_pixel: usize,
-    max_depth: usize,
+    image_width: u16,
+    image_height: u16,
+    samples_per_pixel: u16,
+    max_depth: u16,
 }
 
 impl Raytracer {
     pub fn new(
         camera: Camera,
-        image_width: usize,
-        image_height: usize,
-        samples_per_pixel: usize,
-        max_depth: usize,
+        image_width: u16,
+        image_height: u16,
+        samples_per_pixel: u16,
+        max_depth: u16,
     ) -> Self {
         Self {
             camera,
@@ -59,14 +59,15 @@ impl Raytracer {
             .progress_chars("#>-"),
         );
 
-        let mut colors = vec![color!(0., 0., 0.); self.image_height * self.image_width];
+        let mut colors =
+            vec![color!(0., 0., 0.); self.image_height as usize * self.image_width as usize];
         colors
             .par_iter_mut()
             .enumerate()
             .for_each(|(index, color)| {
                 let mut rng = rand::thread_rng();
-                let i = index % self.image_width;
-                let j = self.image_height - index / self.image_width - 1;
+                let i = index % self.image_width as usize;
+                let j = self.image_height as usize - index / self.image_width as usize - 1;
 
                 let mut pixel_color = color!(0., 0., 0.);
 
@@ -92,7 +93,7 @@ impl Raytracer {
 
     pub fn render(&self) -> RgbImage {
         // Progressbar
-        let bar = ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
+        let bar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
         bar.set_style(
             ProgressStyle::with_template(
                 "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
@@ -101,14 +102,15 @@ impl Raytracer {
             .progress_chars("#>-"),
         );
 
-        let mut colors = vec![color!(0., 0., 0.); self.image_height * self.image_width];
+        let mut colors =
+            vec![color!(0., 0., 0.); self.image_height as usize * self.image_width as usize];
         colors
             .par_iter_mut()
             .enumerate()
             .for_each(|(index, color)| {
                 let mut rng = rand::thread_rng();
-                let i = index % self.image_width;
-                let j = self.image_height - index / self.image_width - 1;
+                let i = index % self.image_width as usize;
+                let j = self.image_height as usize - index / self.image_width as usize - 1;
 
                 let mut pixel_color = color!(0., 0., 0.);
 
@@ -129,14 +131,11 @@ impl Raytracer {
                 *color = pixel_color;
             });
 
-        let mut image = RgbImage::new(
-            self.image_width.try_into().unwrap(),
-            self.image_height.try_into().unwrap(),
-        );
+        let mut image = RgbImage::new(self.image_width.into(), self.image_height.into());
         colors.into_iter().enumerate().for_each(|(index, color)| {
-            let i = index % self.image_width;
-            let j = index / self.image_width;
-            image.put_pixel(i.try_into().unwrap(), j.try_into().unwrap(), color.into());
+            let i = index % self.image_width as usize;
+            let j = index / self.image_width as usize;
+            image.put_pixel(i as u32, j as u32, color.into());
         });
         image
     }
