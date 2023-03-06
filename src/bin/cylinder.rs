@@ -8,9 +8,9 @@ use std::{path::Path, sync::Arc};
 fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
-    let image_width: usize = 800;
-    let image_height = (image_width as f32 / aspect_ratio) as usize;
-    let samples_per_pixel: usize = 200;
+    let image_width: u16 = 800;
+    let image_height = (image_width as f32 / aspect_ratio) as u16;
+    let samples_per_pixel: u16 = 200;
     let max_depth = 100;
 
     // Camera

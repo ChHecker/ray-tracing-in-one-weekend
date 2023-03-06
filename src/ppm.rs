@@ -7,12 +7,12 @@ use crate::vec3::Color;
 
 pub struct PPM {
     colors: Vec<Color>,
-    image_width: usize,
-    image_height: usize,
+    image_width: u16,
+    image_height: u16,
 }
 
 impl PPM {
-    pub fn new(colors: Vec<Color>, image_width: usize, image_height: usize) -> Self {
+    pub fn new(colors: Vec<Color>, image_width: u16, image_height: u16) -> Self {
         Self {
             colors,
             image_width,
