@@ -1,4 +1,3 @@
-use crate::clamp;
 use image::Rgb;
 use rand::Rng;
 use std::{fmt, ops};
@@ -90,9 +89,9 @@ impl Color {
     pub fn to_color_str(&self) -> String {
         format!(
             "{} {} {}",
-            (256. * clamp(self.x(), 0., 0.999)) as u8,
-            (256. * clamp(self.y(), 0., 0.999)) as u8,
-            (256. * clamp(self.z(), 0., 0.999)) as u8
+            (256. * self.x().clamp(0., 0.999)) as u8,
+            (256. * self.y().clamp(0., 0.999)) as u8,
+            (256. * self.z().clamp(0., 0.999)) as u8
         )
     }
 }
@@ -118,9 +117,9 @@ impl Vec3 for Color {
 impl From<Color> for Rgb<u8> {
     fn from(color: Color) -> Rgb<u8> {
         Rgb([
-            (256. * clamp(color.x(), 0., 0.999)) as u8,
-            (256. * clamp(color.y(), 0., 0.999)) as u8,
-            (256. * clamp(color.z(), 0., 0.999)) as u8,
+            (256. * color.x().clamp(0., 0.999)) as u8,
+            (256. * color.y().clamp(0., 0.999)) as u8,
+            (256. * color.z().clamp(0., 0.999)) as u8,
         ])
     }
 }

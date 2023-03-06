@@ -13,13 +13,3 @@ pub use hittable::{HitRecord, Hittable, HittableList};
 pub use ray::Ray;
 pub use raytracer::Raytracer;
 pub use vec3::{Color, Point, Vec3};
-
-pub fn clamp<T: PartialOrd>(x: T, min: T, max: T) -> T {
-    if x < min {
-        return min;
-    }
-    if x > max {
-        return max;
-    }
-    x
-}
