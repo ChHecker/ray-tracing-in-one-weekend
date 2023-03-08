@@ -6,19 +6,19 @@ use rayon::prelude::*;
 
 fn ray_color(world: &HittableList, ray: Ray, depth: u16) -> Color {
     if depth == 0 {
-        return color!(0., 0., 0.);
+        return color![0., 0., 0.];
     }
 
     if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
         if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
             return attenuation * ray_color(world, scattered, depth - 1);
         }
-        return color!(0., 0., 0.);
+        return color![0., 0., 0.];
     }
 
     let unit_direction = ray.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    (1.0 - t) * color!(1., 1., 1.) + t * color!(0.5, 0.7, 1.0)
+    (1.0 - t) * color![1., 1., 1.] + t * color![0.5, 0.7, 1.0]
 }
 
 pub struct Raytracer {
@@ -60,7 +60,7 @@ impl Raytracer {
         );
 
         let mut colors =
-            vec![color!(0., 0., 0.); self.image_height as usize * self.image_width as usize];
+            vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];
         colors
             .par_iter_mut()
             .enumerate()
@@ -69,7 +69,7 @@ impl Raytracer {
                 let i = index % self.image_width as usize;
                 let j = self.image_height as usize - index / self.image_width as usize - 1;
 
-                let mut pixel_color = color!(0., 0., 0.);
+                let mut pixel_color = color![0., 0., 0.];
 
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
@@ -103,7 +103,7 @@ impl Raytracer {
         );
 
         let mut colors =
-            vec![color!(0., 0., 0.); self.image_height as usize * self.image_width as usize];
+            vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];
         colors
             .par_iter_mut()
             .enumerate()
@@ -112,7 +112,7 @@ impl Raytracer {
                 let i = index % self.image_width as usize;
                 let j = self.image_height as usize - index / self.image_width as usize - 1;
 
-                let mut pixel_color = color!(0., 0., 0.);
+                let mut pixel_color = color![0., 0., 0.];
 
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;

@@ -14,9 +14,9 @@ fn main() {
     let max_depth = 100;
 
     // Camera
-    let lookfrom = point!(0., 0., 2.);
-    let lookat = point!(0., 0., 0.);
-    let vup = point!(0., 1., 0.);
+    let lookfrom = point![0., 0., 2.];
+    let lookat = point![0., 0., 0.];
+    let vup = point![0., 1., 0.];
     let camera = Camera::new(
         lookfrom,
         lookat,
@@ -36,24 +36,24 @@ fn main() {
     );
 
     let cylinder = Cylinder::new(
-        point!(-1., 0., -1.),
+        point![-1., 0., -1.],
         0.5,
         0.5,
-        Arc::new(Lambertian::new(color!(1., 0., 0.))),
+        Arc::new(Lambertian::new(color![1., 0., 0.])),
     );
     raytracer.world.push(Arc::new(cylinder));
 
     let sphere = Sphere::new(
-        point!(1., 0., -1.),
+        point![1., 0., -1.],
         0.5,
-        Arc::new(Lambertian::new(color!(0., 0., 1.))),
+        Arc::new(Lambertian::new(color![0., 0., 1.])),
     );
     raytracer.world.push(Arc::new(sphere));
 
     let ground = Sphere::new(
-        point!(0., -100.5, -1.),
+        point![0., -100.5, -1.],
         100.,
-        Arc::new(Lambertian::new(color!(0., 1., 0.))),
+        Arc::new(Lambertian::new(color![0., 1., 0.])),
     );
     raytracer.world.push(Arc::new(ground));
 
