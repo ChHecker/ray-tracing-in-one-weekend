@@ -1,14 +1,15 @@
-use std::sync::Arc;
-
 use crate::{hittable::Aabb, materials::Material, *};
+use std::{fmt::Debug, sync::Arc};
 
-pub trait Position {}
+pub trait Position: Debug {}
 
+#[derive(Debug)]
 pub struct Stationary {
     pub position: Point,
 }
 impl Position for Stationary {}
 
+#[derive(Debug)]
 pub struct Moving {
     pub position: (Point, Point),
     pub time: (f32, f32),
@@ -22,6 +23,7 @@ impl Moving {
 }
 impl Position for Moving {}
 
+#[derive(Debug)]
 pub struct Sphere<M: Material + 'static, P: Position> {
     center: P,
     radius: f32,
@@ -67,9 +69,9 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
         let discriminant_sqrt = discriminant.sqrt();
 
         let mut root = (-b_halves - discriminant_sqrt) / a;
-        if root < t_min || t_max < root {
+        if root < t_min || root > t_max {
             root = (-b_halves + discriminant_sqrt) / a;
-            if root < t_min || t_max < root {
+            if root < t_min || root > t_max {
                 return None;
             }
         }
@@ -105,9 +107,9 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
         let discriminant_sqrt = discriminant.sqrt();
 
         let mut root = (-b_halves - discriminant_sqrt) / a;
-        if root < t_min || t_max < root {
+        if root < t_min || root > t_max {
             root = (-b_halves + discriminant_sqrt) / a;
-            if root < t_min || t_max < root {
+            if root < t_min || root > t_max {
                 return None;
             }
         }
@@ -131,10 +133,11 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
             self.center.position(time1) - point![self.radius, self.radius, self.radius],
             self.center.position(time1) + point![self.radius, self.radius, self.radius],
         );
-        Some(Aabb::surrounding_aabb(&aabb1, &aabb2))
+        Some(Aabb::surrounding(&aabb1, &aabb2))
     }
 }
 
+#[derive(Debug)]
 pub struct Cylinder<M: Material + 'static> {
     center: Point,
     radius: f32,
@@ -171,7 +174,7 @@ impl<M: Material> Hittable for Cylinder<M> {
 
         let root1 = (-b_halves - discriminant_sqrt) / a;
         let root2 = (-b_halves + discriminant_sqrt) / a;
-        if (root1 < t_min || t_max < root1) && (root2 < t_min || t_max < root2) {
+        if (root1 < t_min || root1 > t_max) && (root2 < t_min || root2 > t_max) {
             return None;
         }
 
@@ -195,7 +198,7 @@ impl<M: Material> Hittable for Cylinder<M> {
             root = (upper_bound - ray.origin().y()) / ray.direction().y();
             point = ray.at(root);
 
-            if root < t_min || t_max < root {
+            if root < t_min || root > t_max {
                 return None;
             }
         } else if point1.y() < lower_bound {
@@ -209,16 +212,16 @@ impl<M: Material> Hittable for Cylinder<M> {
             root = (lower_bound - ray.origin().y()) / ray.direction().y();
             point = ray.at(root);
 
-            if root < t_min || t_max < root {
+            if root < t_min || root > t_max {
                 return None;
             }
         } else {
             root = root1;
             point = point1;
-            if root < t_min || t_max < root {
+            if root < t_min || root > t_max {
                 root = root2;
                 point = point2;
-                if root < t_min || t_max < root {
+                if root < t_min || root > t_max {
                     return None;
                 }
             }
@@ -238,8 +241,8 @@ impl<M: Material> Hittable for Cylinder<M> {
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(Aabb::new(
-            self.center - point![self.radius, self.height, self.radius],
-            self.center + point![self.radius, self.height, self.radius],
+            self.center - point![self.radius, self.height / 2., self.radius],
+            self.center + point![self.radius, self.height / 2., self.radius],
         ))
     }
 }
