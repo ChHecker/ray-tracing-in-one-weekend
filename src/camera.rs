@@ -1,6 +1,7 @@
 use crate::*;
 use rand::Rng;
 
+#[derive(Clone, Debug)]
 pub struct Camera {
     origin: Point,
     lower_left_corner: Point,
@@ -68,6 +69,10 @@ impl Camera {
         } else {
             ray
         }
+    }
+
+    pub fn time(&self) -> Option<(f32, f32)> {
+        self.time
     }
 }
 

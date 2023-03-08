@@ -1,11 +1,12 @@
-use rand::Rng;
-
 use crate::*;
+use rand::Rng;
+use std::fmt::Debug;
 
-pub trait Material: Send + Sync {
+pub trait Material: Debug + Send + Sync {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
 }
 
+#[derive(Debug)]
 pub struct Lambertian {
     albedo: Color,
 }
@@ -29,6 +30,7 @@ impl Material for Lambertian {
     }
 }
 
+#[derive(Debug)]
 pub struct Metal {
     albedo: Color,
     fuzz: f32,
@@ -56,6 +58,7 @@ impl Material for Metal {
     }
 }
 
+#[derive(Debug)]
 pub struct Dielectric {
     index_of_refraction: f32,
 }

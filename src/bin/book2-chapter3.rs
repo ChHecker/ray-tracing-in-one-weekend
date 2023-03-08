@@ -58,8 +58,8 @@ fn main() {
     let aspect_ratio = 16. / 10.;
     let image_width: u16 = 800;
     let image_height = (image_width as f32 / aspect_ratio) as u16;
-    let samples_per_pixel: u16 = 100;
-    let max_depth = 50;
+    let samples_per_pixel: u16 = 50;
+    let max_depth = 20;
 
     // Camera
     let lookfrom = point![13., 2., 3.];
@@ -86,7 +86,7 @@ fn main() {
     random_world(&mut raytracer.world);
 
     raytracer
-        .render_without_bvh()
-        .save(&Path::new("images/book2-chapter2.png"))
+        .render()
+        .save(&Path::new("images/book2-chapter3.png"))
         .unwrap();
 }
