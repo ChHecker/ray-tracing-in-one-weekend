@@ -6,11 +6,7 @@ fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();
 
     let ground_material = Arc::new(Lambertian::new(color![0.5, 0.5, 0.5]));
-    let ground_sphere = Arc::new(Sphere::<Stationary>::new(
-        point![0., -1000., 0.],
-        1000.,
-        ground_material,
-    ));
+    let ground_sphere = Arc::new(Sphere::new(point![0., -1000., 0.], 1000., ground_material));
     world.push(ground_sphere);
 
     for a in -11..11 {
@@ -22,21 +18,20 @@ fn random_world(world: &mut HittableList) {
                 b as f32 + 0.9 * rng.gen::<f32>(),
             );
 
-            let sphere_material: Arc<dyn Material + Send + Sync>;
-
             if (center - point![4., 0.2, 0.]).norm() > 0.9 {
                 if choose_material < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    sphere_material = Arc::new(Lambertian::new(albedo));
+                    let sphere_material = Arc::new(Lambertian::new(albedo));
+                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else if choose_material < 0.9 {
                     let albedo = Color::random_in_range(0.5, 1.);
                     let fuzz = 0.5 * rng.gen::<f32>();
-                    sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    let sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
-                    sphere_material = Arc::new(Dielectric::new(1.5));
+                    let sphere_material = Arc::new(Dielectric::new(1.5));
+                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 }
-
-                world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
             }
         }
     }
