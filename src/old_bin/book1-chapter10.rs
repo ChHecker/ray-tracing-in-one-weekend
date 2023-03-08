@@ -6,21 +6,21 @@ fn demo_world(world: &mut HittableList) {
     let ground = Sphere::new(
         Point3::new(0., -100.5, -1.),
         100.,
-        Arc::new(Lambertian::new(color!(0., 1., 0.))),
+        Arc::new(Lambertian::new(color![0., 1., 0.])),
     );
     world.push(Arc::new(ground));
 
     let diffusive_sphere = Sphere::new(
         Point3::new(0., 0., -1.),
         0.5,
-        Arc::new(Lambertian::new(color!(1., 0., 0.))),
+        Arc::new(Lambertian::new(color![1., 0., 0.])),
     );
     world.push(Arc::new(diffusive_sphere));
 
     let metal_sphere = Sphere::new(
         Point3::new(-1., 0., -1.),
         0.5,
-        Arc::new(Metal::new(color!(0.2, 0.2, 0.2), 1.)),
+        Arc::new(Metal::new(color![0.2, 0.2, 0.2], 1.)),
     );
     world.push(Arc::new(metal_sphere));
 
@@ -42,7 +42,7 @@ fn demo_world(world: &mut HittableList) {
 fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();
 
-    let ground_material = Arc::new(Lambertian::new(color!(0.5, 0.5, 0.5)));
+    let ground_material = Arc::new(Lambertian::new(color![0.5, 0.5, 0.5]));
     let ground_sphere = Arc::new(Sphere::new(
         Point3::new(0., -1000., 0.),
         1000.,
@@ -82,11 +82,11 @@ fn random_world(world: &mut HittableList) {
     let sphere1 = Arc::new(Sphere::new(Point3::new(0., 1., 0.), 1., material1));
     world.push(sphere1);
 
-    let material2 = Arc::new(Lambertian::new(color!(0.4, 0.2, 0.1)));
+    let material2 = Arc::new(Lambertian::new(color![0.4, 0.2, 0.1]));
     let sphere2 = Arc::new(Sphere::new(Point3::new(-4., 1., 0.), 1., material2));
     world.push(sphere2);
 
-    let material3 = Arc::new(Metal::new(color!(0.7, 0.6, 0.5), 0.));
+    let material3 = Arc::new(Metal::new(color![0.7, 0.6, 0.5], 0.));
     let sphere3 = Arc::new(Sphere::new(Point3::new(4., 1., 0.), 1., material3));
     world.push(sphere3);
 }

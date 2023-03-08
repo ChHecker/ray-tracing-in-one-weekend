@@ -97,6 +97,6 @@ impl Material for Dielectric {
             };
 
         let scattered = Ray::new(hit.point(), direction).with_time(ray.time());
-        Some((scattered, color!(1., 1., 1.)))
+        Some((scattered, color![1., 1., 1.]))
     }
 }

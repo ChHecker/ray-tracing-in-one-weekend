@@ -74,9 +74,9 @@ impl Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self::new(
-            point!(0., 0., 0.),
-            point!(0., 0., -1.),
-            point!(0., 1., 0.),
+            point![0., 0., 0.],
+            point![0., 0., -1.],
+            point![0., 1., 0.],
             std::f32::consts::FRAC_PI_6,
             16. / 9.,
             0.,
