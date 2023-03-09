@@ -407,6 +407,10 @@ impl Bvh {
         time0: f32,
         time1: f32,
     ) -> Result<Self, BoundingBoxError> {
+        if hittables.is_empty() {
+            return Err(BoundingBoxError);
+        }
+
         for hittable in &hittables.hittables {
             if hittable.bounding_box(0., 0.).is_none() {
                 return Err(BoundingBoxError);
