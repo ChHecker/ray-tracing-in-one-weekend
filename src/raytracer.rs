@@ -243,7 +243,7 @@ impl Raytracer {
 
     /// Colors the [`Ray`] according to hits.
     ///
-    /// Chooses whether to use [`ray_color_bvh`] or [`ray_color_hittable`] from the [`HittableListOptions`] enum.
+    /// Chooses whether to use [`Raytracer::ray_color_bvh`] or [`Raytracer::ray_color_hittable`] from the [`HittableListOptions`] enum.
     fn ray_color(world: &HittableListOptions, ray: Ray, depth: u16) -> Color {
         match world {
             HittableListOptions::HittableList(world) => {
