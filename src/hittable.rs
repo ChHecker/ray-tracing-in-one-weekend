@@ -169,7 +169,12 @@ impl HittableList {
         self.hittables.clear();
     }
 
-    /// Length of the [`HittableList`]
+    /// Whether the [`HittableList`] is empty.
+    pub fn is_empty(&self) -> bool {
+        self.hittables.is_empty()
+    }
+
+    /// Length of the [`HittableList`].
     pub fn len(&self) -> usize {
         self.hittables.len()
     }
@@ -377,7 +382,7 @@ impl Bvh {
         time1: f32,
     ) -> Result<Self, BoundingBoxError> {
         for hittable in &hittables.hittables {
-            if let None = hittable.bounding_box(0., 0.) {
+            if hittable.bounding_box(0., 0.).is_none() {
                 return Err(BoundingBoxError);
             }
         }
