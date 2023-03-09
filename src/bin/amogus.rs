@@ -3,13 +3,18 @@ use std::sync::Arc;
 
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
+use ray_tracing_in_one_weekend::textures::*;
 use ray_tracing_in_one_weekend::*;
 
 fn amogus(world: &mut HittableList) {
+    let red_diffusive_material = Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
+        1., 0., 0.
+    ]))));
+
     let ground = Sphere::new(
         point![0., -1000., -1.],
         1000.,
-        Arc::new(Lambertian::new(color![0., 1., 0.])),
+        Arc::new(Lambertian::solid_color(color![0., 1., 0.])),
     );
     world.push(Arc::new(ground));
 
@@ -17,7 +22,7 @@ fn amogus(world: &mut HittableList) {
         point![-1., 0.5, -1.],
         0.5,
         1.,
-        Arc::new(Lambertian::new(color![1., 0., 0.])),
+        red_diffusive_material.clone(),
     );
     world.push(Arc::new(left_leg));
 
@@ -25,7 +30,7 @@ fn amogus(world: &mut HittableList) {
         point![1., 0.5, -1.],
         0.5,
         1.,
-        Arc::new(Lambertian::new(color![1., 0., 0.])),
+        red_diffusive_material.clone(),
     );
     world.push(Arc::new(right_leg));
 
@@ -33,15 +38,11 @@ fn amogus(world: &mut HittableList) {
         point![0., 2.5, -1.],
         1.5,
         3.,
-        Arc::new(Lambertian::new(color![1., 0., 0.])),
+        red_diffusive_material.clone(),
     );
     world.push(Arc::new(body));
 
-    let head = Sphere::new(
-        point![0., 4., -1.],
-        1.5,
-        Arc::new(Lambertian::new(color![1., 0., 0.])),
-    );
+    let head = Sphere::new(point![0., 4., -1.], 1.5, red_diffusive_material.clone());
     world.push(Arc::new(head));
 
     let visor = Sphere::new(
@@ -55,7 +56,7 @@ fn amogus(world: &mut HittableList) {
         point![0., 3., -2.75],
         0.5,
         1.8,
-        Arc::new(Lambertian::new(color![0.8, 0., 0.])),
+        Arc::new(Lambertian::solid_color(color![0.8, 0., 0.])),
     );
     world.push(Arc::new(backpack));
 

@@ -12,7 +12,7 @@ pub mod ppm;
 pub mod ray;
 pub mod raytracer;
 pub mod shapes;
-pub mod texture;
+pub mod textures;
 #[macro_use]
 pub mod vec3;
 

@@ -1,10 +1,12 @@
 //! Collection of materials of [`Hittable`]s.
 
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use rand::Rng;
 
 use crate::ray::Ray;
+use crate::textures::{SolidColor, Texture};
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.
@@ -16,18 +18,31 @@ pub trait Material: Debug + Send + Sync {
 }
 
 /// A realistic perfectly diffusive material.
+///
+/// # Fields
+/// - `albedo`: Color of the [`Lambertian`].
 #[derive(Debug)]
-pub struct Lambertian {
-    albedo: Color,
+pub struct Lambertian<T: Texture> {
+    albedo: Arc<T>,
 }
 
-impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: Arc<T>) -> Self {
         Self { albedo }
     }
 }
 
-impl Material for Lambertian {
+impl Lambertian<SolidColor> {
+    /// Create a new [`Lambertian`] from a color.
+    ///
+    /// This does however not offer the option to use one [`Texture`] for multiple [`Material`]s.
+    pub fn solid_color(albedo: Color) -> Self {
+        let albedo = Arc::new(SolidColor::new(albedo));
+        Self { albedo }
+    }
+}
+
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut scatter_direction = hit.normal() + Point::random_unit_vector();
 
@@ -36,25 +51,36 @@ impl Material for Lambertian {
         }
 
         let scattered = Ray::new(hit.point(), scatter_direction).with_time(ray.time());
-        Some((scattered, self.albedo))
+        Some((
+            scattered,
+            self.albedo.color_at(hit.u(), hit.v(), hit.point()),
+        ))
     }
 }
 
 /// A fuzzy reflective material (metal).
 #[derive(Debug)]
-pub struct Metal {
-    albedo: Color,
+pub struct Metal<T: Texture> {
+    albedo: Arc<T>,
     fuzz: f32,
 }
 
-impl Metal {
-    pub fn new(albedo: Color, fuzz: f32) -> Self {
+impl<T: Texture> Metal<T> {
+    pub fn new(albedo: Arc<T>, fuzz: f32) -> Self {
         let fuzz = if fuzz < 1. { fuzz } else { 1. };
         Self { albedo, fuzz }
     }
 }
 
-impl Material for Metal {
+impl Metal<SolidColor> {
+    pub fn solid_color(albedo: Color, fuzz: f32) -> Self {
+        let fuzz = if fuzz < 1. { fuzz } else { 1. };
+        let albedo = Arc::new(SolidColor::new(albedo));
+        Self { albedo, fuzz }
+    }
+}
+
+impl<T: Texture> Material for Metal<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let reflected = ray.direction().unit_vector().reflect(&hit.normal());
         let scattered = Ray::new(
@@ -63,7 +89,10 @@ impl Material for Metal {
         )
         .with_time(ray.time());
         if scattered.direction().dot(&hit.normal()) > 0. {
-            return Some((scattered, self.albedo));
+            return Some((
+                scattered,
+                self.albedo.color_at(hit.u(), hit.v(), hit.point()),
+            ));
         }
         None
     }
