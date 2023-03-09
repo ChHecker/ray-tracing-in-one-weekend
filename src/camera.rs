@@ -1,6 +1,23 @@
+//! A camera that receives [`Ray`]s.
+
+use crate::ray::Ray;
 use crate::*;
 use rand::Rng;
 
+/// A struct for a camera.
+///
+/// This stores all necessary information about the viewport as well as the depth-of-field.
+///
+/// # Fields
+/// - `origin`: [Point] where the camera is positioned.
+/// - `lower_left_corner`: Lower left corner of the viewport.
+/// - `horizontal`: Horizontal stretch of the viewport.
+/// - `vertical`: Vertical stretch of the viewport.
+/// - `u`: Normal to the direction the camera is facing and its upwards direction.
+/// - `v`: Unit upwards direction.
+/// - `w`: Unit direction the camera is facing.
+/// - `lens_radius` Radius of the lense for the purpose of depth-of-field (half the aperture).
+/// - `time`: Optional exposure time.
 #[derive(Clone, Debug)]
 pub struct Camera {
     origin: Point,
@@ -15,6 +32,16 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Create a new camera.
+    ///
+    /// # Parameters
+    /// - `lookfrom`: Position of the camera.
+    /// - `lookat`: [Point] the camera is facing.
+    /// - `vup`: Upwards direction of the camera.
+    /// - `vertical_fov`: Angle of the vertical field of view (between point the camera is facing and the upper border of the viewport).
+    /// - `aspect_ratio`: Aspect ratio of the viewport.
+    /// - `aperture`: Aperture for the purpose of depth-of-field (double the radius of the lense).
+    /// - `lens_radius` Radius of the lense for the purpose of depth-of-field (half the aperture).
     pub fn new(
         lookfrom: Point,
         lookat: Point,
@@ -49,11 +76,13 @@ impl Camera {
         }
     }
 
+    /// Consume `self` and create a [`Camera`] with a non-zero exposure.
     pub fn with_time(mut self, time_start: f32, time_end: f32) -> Self {
         self.time = Some((time_start, time_end));
         self
     }
 
+    /// Emit a [`Ray`] from the camera.
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let mut rng = rand::thread_rng();
 

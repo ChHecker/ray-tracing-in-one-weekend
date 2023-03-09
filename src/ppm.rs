@@ -1,3 +1,5 @@
+//! A simple Portable Pixmap image format (`.ppm`) writer.
+
 use std::fs;
 use std::io;
 use std::io::Write;
@@ -5,6 +7,12 @@ use std::path::Path;
 
 use crate::vec3::Color;
 
+/// Portable Pixmap image format (`.ppm`) writer struct.
+///
+/// # Fields
+/// - `colors`: Flat [vector](Vec) of [colors](Color)
+/// - `image_width`: Width of the image
+/// - `image_height`: Height of the image
 pub struct PPM {
     colors: Vec<Color>,
     image_width: u16,
@@ -20,9 +28,9 @@ impl PPM {
         }
     }
 
-    /// Writes array `arr` of dimension `x * y` into a PPM file
-    pub fn write_ppm(&self, path: &Path) -> io::Result<()> {
-        let mut path = path.to_path_buf();
+    /// Write the PPM file.
+    pub fn write_ppm<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
+        let mut path = path.as_ref().to_path_buf();
         match path.extension() {
             Some(ext) => {
                 if ext != "ppm" {

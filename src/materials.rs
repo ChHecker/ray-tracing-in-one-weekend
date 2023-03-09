@@ -1,11 +1,19 @@
+//! Collection of materials of [`Hittable`]s.
+
+use crate::ray::Ray;
 use crate::*;
 use rand::Rng;
 use std::fmt::Debug;
 
+/// An abstraction for materials of [`Hittable`]s.
+///
+/// Each materials reemits one [`Ray`] in some way and also includes its color when hit by one.
 pub trait Material: Debug + Send + Sync {
+    /// Scatters the incoming [`Ray`] into an outgoing [`Ray`] and includes [`Color`] information.
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
 }
 
+/// A realistic perfectly diffusive material.
 #[derive(Debug)]
 pub struct Lambertian {
     albedo: Color,
@@ -30,6 +38,7 @@ impl Material for Lambertian {
     }
 }
 
+/// A fuzzy reflective material (metal).
 #[derive(Debug)]
 pub struct Metal {
     albedo: Color,
@@ -58,6 +67,7 @@ impl Material for Metal {
     }
 }
 
+/// A transparent material.
 #[derive(Debug)]
 pub struct Dielectric {
     index_of_refraction: f32,
