@@ -14,13 +14,15 @@ use crate::materials::Material;
 use crate::ray::Ray;
 use crate::*;
 
+// TODO: Replace alls Arcs by references and benchmark
 type MaterialArc = Arc<dyn Material>;
 /// A record for when a [Ray] hits something.
 ///
 /// This struct should be returned when a [Hittable] object is hit by a [Ray] as it contains all necessary information to deal with this.
 ///
 /// # Fields
-/// - `point': [Point] where the hit happened.
+/// - `point`: [Point] where the hit happened.
+/// - (`u`, `v`): Coordinates on the surface submanifold (lie inside \[0,1\]).
 /// - `normal`: Normal vector to the surface.
 /// - `t`: Parameter of the [Ray] where the hit happened.
 /// - `front_face`: Whether the hit faces the front or the back of the [Hittable].
@@ -28,6 +30,8 @@ type MaterialArc = Arc<dyn Material>;
 #[derive(Clone, Debug)]
 pub struct HitRecord {
     point: Point,
+    u: f32,
+    v: f32,
     normal: Point,
     t: f32,
     front_face: bool,
@@ -38,6 +42,8 @@ impl HitRecord {
     /// Create a hit record.
     pub fn new(
         point: Point,
+        u: f32,
+        v: f32,
         normal: Point,
         t: f32,
         front_face: bool,
@@ -45,6 +51,8 @@ impl HitRecord {
     ) -> Self {
         HitRecord {
             point,
+            u,
+            v,
             normal,
             t,
             front_face,
@@ -55,10 +63,20 @@ impl HitRecord {
     /// Create a hit record from a [Ray].
     ///
     /// This uses a [Ray] and the normal to set `front_face`.
-    pub fn from_ray(point: Point, normal: Point, t: f32, material: MaterialArc, ray: Ray) -> Self {
+    pub fn from_ray(
+        point: Point,
+        u: f32,
+        v: f32,
+        normal: Point,
+        t: f32,
+        material: MaterialArc,
+        ray: Ray,
+    ) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
         HitRecord {
             point,
+            u,
+            v,
             normal,
             t,
             front_face,
@@ -68,6 +86,14 @@ impl HitRecord {
 
     pub fn point(&self) -> Point {
         self.point
+    }
+
+    pub fn u(&self) -> f32 {
+        self.u
+    }
+
+    pub fn v(&self) -> f32 {
+        self.v
     }
 
     pub fn normal(&self) -> Point {
@@ -462,18 +488,23 @@ mod test {
     use super::*;
     use crate::materials::Lambertian;
     use crate::shapes::Sphere;
+    use crate::textures::SolidColor;
 
     #[test]
     fn bvh_hit() {
         let left = Arc::new(Sphere::new(
             point![-2., 0., -1.],
             1.,
-            Arc::new(Lambertian::new(color![1., 1., 1.])),
+            Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
+                1., 1., 1.
+            ])))),
         ));
         let right = Arc::new(Sphere::new(
             point![2., 0., -1.],
             1.,
-            Arc::new(Lambertian::new(color![1., 1., 1.])),
+            Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
+                1., 1., 1.
+            ])))),
         ));
         let aabb = Aabb::surrounding(
             &left.bounding_box(0., 0.).unwrap(),

@@ -1,5 +1,6 @@
 //! Collection of [hittable](`Hittable`) shapes .
 
+use std::f32::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -56,6 +57,16 @@ impl<M: Material, P: Position> Sphere<M, P> {
 
     pub fn material(&self) -> Arc<M> {
         self.material.clone()
+    }
+
+    /// Get the surface coordinates (u, v) on the sphere from a [`Point`].
+    ///
+    /// The pair (u, v) is defined by the angles in spherical coordinates via u = phi/(2pi), v = theta/pi.
+    fn get_surface_coordinates(&self, point: Point) -> (f32, f32) {
+        let theta = -point.y().acos();
+        let phi = f32::atan2(-point.z(), point.x()) + PI;
+
+        (phi / (2. * PI), theta / PI)
     }
 }
 
@@ -118,9 +129,14 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
         }
 
         let point = ray.at(root);
+        let normal = (point - self.position()) / self.radius;
+        let (u, v) = self.get_surface_coordinates(normal);
+
         Some(HitRecord::from_ray(
             point,
-            (point - self.position()) / self.radius,
+            u,
+            v,
+            normal,
             root,
             self.material.clone(),
             ray,
@@ -156,9 +172,14 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
         }
 
         let point = ray.at(root);
+        let normal = (point - self.position(ray.time())) / self.radius;
+        let (u, v) = self.get_surface_coordinates(normal);
+
         Some(HitRecord::from_ray(
             point,
-            (point - self.position(ray.time())) / self.radius,
+            u,
+            v,
+            normal,
             root,
             self.material.clone(),
             ray,
@@ -301,6 +322,8 @@ impl<M: Material> Hittable for Cylinder<M, Stationary> {
 
         Some(HitRecord::from_ray(
             point,
+            0., // TODO
+            0.,
             normal,
             root,
             self.material.clone(),
