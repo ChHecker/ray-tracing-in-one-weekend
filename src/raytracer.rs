@@ -23,9 +23,9 @@ use crate::*;
 /// - `image_height`: Height of the resulting image.
 /// - `samples_per_pixel`: How many samples to take for each pixel for the purpose of anti-aliasing.
 /// - `max_depth`: How often a [`Ray`] should bounce at most.
-#[derive(Clone, Debug)]
-pub struct Raytracer {
-    pub world: HittableList,
+#[derive(Debug)]
+pub struct Raytracer<'a> {
+    pub world: HittableList<'a>,
     camera: Camera,
     image_width: u16,
     image_height: u16,
@@ -34,7 +34,7 @@ pub struct Raytracer {
     progressbar: Option<ProgressBar>,
 }
 
-impl Raytracer {
+impl<'a> Raytracer<'a> {
     pub fn new(
         camera: Camera,
         image_width: u16,
@@ -79,24 +79,22 @@ impl Raytracer {
     ///
     /// Tries to optimize `world` into a [`Bvh`], but falls back to the slower implementation if not possible (i.e. [`Bvh::new`] return [`BoundingBoxError`]).
     /// This function uses multithreading with the help of the [`rayon`] crate.
-    pub fn render(mut self) -> RaytracedImage {
-        let colors = self.render_multithreaded();
+    pub fn render(self) -> RaytracedImage {
+        let image_width = self.image_width;
+        let image_height = self.image_height;
+        let image = self.render_multithreaded();
 
         RaytracedImage {
-            image: colors,
-            image_width: self.image_width,
-            image_height: self.image_height,
+            image,
+            image_width,
+            image_height,
         }
     }
 
-    fn render_multithreaded(&mut self) -> Vec<Color> {
-        let bvh = match self.camera.time() {
-            Some(time) => Bvh::new(self.world.clone(), time.0, time.1),
-            None => Bvh::new(self.world.clone(), 0., 0.),
-        };
-        let world = match &bvh {
-            Ok(bvh) => HittableListOptions::Bvh(bvh),
-            Err(BoundingBoxError) => HittableListOptions::HittableList(&self.world),
+    fn render_multithreaded(self) -> Vec<Color> {
+        let world = match Bvh::check_hittable_list(&self.world) {
+            Ok(()) => HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH")),
+            Err(BoundingBoxError) => HittableListOptions::HittableList(self.world),
         };
 
         let mut colors =
