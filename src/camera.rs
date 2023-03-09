@@ -1,8 +1,9 @@
 //! A camera that receives [`Ray`]s.
 
+use rand::Rng;
+
 use crate::ray::Ray;
 use crate::*;
-use rand::Rng;
 
 /// A struct for a camera.
 ///

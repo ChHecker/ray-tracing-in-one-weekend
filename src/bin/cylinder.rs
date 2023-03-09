@@ -1,9 +1,9 @@
-use ray_tracing_in_one_weekend::{
-    materials::Lambertian,
-    shapes::{Cylinder, Sphere},
-    *,
-};
-use std::{path::Path, sync::Arc};
+use std::path::Path;
+use std::sync::Arc;
+
+use ray_tracing_in_one_weekend::materials::Lambertian;
+use ray_tracing_in_one_weekend::shapes::{Cylinder, Sphere};
+use ray_tracing_in_one_weekend::*;
 
 fn main() {
     // Image

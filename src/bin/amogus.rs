@@ -1,5 +1,9 @@
-use ray_tracing_in_one_weekend::{materials::*, shapes::*, *};
-use std::{path::Path, sync::Arc};
+use std::path::Path;
+use std::sync::Arc;
+
+use ray_tracing_in_one_weekend::materials::*;
+use ray_tracing_in_one_weekend::shapes::*;
+use ray_tracing_in_one_weekend::*;
 
 fn amogus(world: &mut HittableList) {
     let ground = Sphere::new(

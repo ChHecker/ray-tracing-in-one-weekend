@@ -1,7 +1,12 @@
 //! Collection of [hittable](`Hittable`) shapes .
 
-use crate::{hittable::Aabb, materials::Material, ray::Ray, *};
-use std::{fmt::Debug, sync::Arc};
+use std::fmt::Debug;
+use std::sync::Arc;
+
+use crate::hittable::Aabb;
+use crate::materials::Material;
+use crate::ray::Ray;
+use crate::*;
 
 /// Zero-size trait to mark shapes as [stationary](Stationary) or [moving](Moving).
 pub trait Position: Debug {}

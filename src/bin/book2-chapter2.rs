@@ -1,6 +1,10 @@
+use std::path::Path;
+use std::sync::Arc;
+
 use rand::Rng;
-use ray_tracing_in_one_weekend::{materials::*, shapes::*, *};
-use std::{path::Path, sync::Arc};
+use ray_tracing_in_one_weekend::materials::*;
+use ray_tracing_in_one_weekend::shapes::*;
+use ray_tracing_in_one_weekend::*;
 
 fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();

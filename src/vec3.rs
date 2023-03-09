@@ -1,8 +1,9 @@
 //! A simple 3D vector.
 
+use std::{fmt, ops};
+
 use image::Rgb;
 use rand::Rng;
-use std::{fmt, ops};
 
 /// Macro for [`Color::new`]
 #[macro_export]

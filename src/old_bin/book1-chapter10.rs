@@ -1,6 +1,8 @@
+use std::path::Path;
+use std::sync::Arc;
+
 use rand::Rng;
 use ray_tracing_in_one_weekend::*;
-use std::{path::Path, sync::Arc};
 
 fn demo_world(world: &mut HittableList) {
     let ground = Sphere::new(

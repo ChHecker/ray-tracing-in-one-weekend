@@ -1,9 +1,11 @@
 //! Collection of materials of [`Hittable`]s.
 
+use std::fmt::Debug;
+
+use rand::Rng;
+
 use crate::ray::Ray;
 use crate::*;
-use rand::Rng;
-use std::fmt::Debug;
 
 /// An abstraction for materials of [`Hittable`]s.
 ///
