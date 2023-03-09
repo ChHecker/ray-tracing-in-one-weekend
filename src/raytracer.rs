@@ -53,7 +53,7 @@ impl Raytracer {
     ///
     /// The function [`render`](Raytracer::render) should be preferred as other image formats are much smaller and the resulting [`RgbImage`] has more possible functions.
     /// Look at [its documentation](Raytracer::render) for more details.
-    pub fn render_ppm(&mut self) -> PPM {
+    pub fn render_ppm(mut self) -> PPM {
         // Progressbar
         let bar = ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
         bar.set_style(
@@ -73,7 +73,7 @@ impl Raytracer {
     ///
     /// Tries to optimize `world` into a [`Bvh`], but falls back to the slower implementation if not possible (i.e. [`Bvh::new`] return [`BoundingBoxError`]).
     /// This function uses multithreading with the help of the [`rayon`] crate.
-    pub fn render(&mut self) -> RgbImage {
+    pub fn render(mut self) -> RgbImage {
         // Progressbar
         let bar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
         bar.set_style(
@@ -99,7 +99,7 @@ impl Raytracer {
     ///
     /// Internal testing function.
     #[allow(dead_code)]
-    pub(crate) fn render_without_bvh(&mut self) -> RgbImage {
+    pub(crate) fn render_without_bvh(mut self) -> RgbImage {
         // Progressbar
         let bar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
         bar.set_style(
