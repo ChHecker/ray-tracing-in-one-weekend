@@ -90,7 +90,7 @@ fn main() {
     random_world(&mut raytracer.world);
 
     raytracer
-        .render_without_bvh()
+        .render()
         .save(&Path::new("images/book2-chapter2.png"))
         .unwrap();
 }

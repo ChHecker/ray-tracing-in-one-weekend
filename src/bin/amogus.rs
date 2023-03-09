@@ -59,11 +59,11 @@ fn amogus(world: &mut HittableList) {
     );
     world.push(Arc::new(backpack));
 
-    let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Arc::new(Dielectric::new(1.5)));
-    world.push(Arc::new(glass_sphere));
+    // let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Arc::new(Dielectric::new(1.5)));
+    // world.push(Arc::new(glass_sphere));
 
-    let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Arc::new(Dielectric::new(1.5)));
-    world.push(Arc::new(inner_glass_sphere));
+    // let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Arc::new(Dielectric::new(1.5)));
+    // world.push(Arc::new(inner_glass_sphere));
 }
 
 fn main() {
