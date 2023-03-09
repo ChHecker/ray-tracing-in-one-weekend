@@ -1,6 +1,8 @@
 //! Central struct for creating a ray tracer and rendering an image.
 
-use image::RgbImage;
+use std::path::Path;
+
+use image::{ImageError, RgbImage};
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use rayon::prelude::*;
@@ -29,6 +31,7 @@ pub struct Raytracer {
     image_height: u16,
     samples_per_pixel: u16,
     max_depth: u16,
+    progressbar: Option<ProgressBar>,
 }
 
 impl Raytracer {
@@ -46,82 +49,47 @@ impl Raytracer {
             samples_per_pixel,
             max_depth,
             world: HittableList::new(),
+            progressbar: None,
         }
     }
 
-    /// Render the image to a [`PPM`].
-    ///
-    /// The function [`render`](Raytracer::render) should be preferred as other image formats are much smaller and the resulting [`RgbImage`] has more possible functions.
-    /// Look at [its documentation](Raytracer::render) for more details.
-    pub fn render_ppm(mut self) -> PPM {
-        // Progressbar
-        let bar = ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
-        bar.set_style(
+    /// Consume `self` and add a progressbar.
+    pub fn with_progressbar(self) -> Self {
+        let progressbar =
+            ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
+        progressbar.set_style(
             ProgressStyle::with_template(
                 "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
             )
             .unwrap()
             .progress_chars("#>-"),
         );
-
-        let colors = self.render_multithreaded_bvh(Some(&bar));
-
-        PPM::new(colors, self.image_width, self.image_height)
+        Self {
+            world: self.world,
+            camera: self.camera,
+            image_width: self.image_width,
+            image_height: self.image_height,
+            samples_per_pixel: self.samples_per_pixel,
+            max_depth: self.max_depth,
+            progressbar: Some(progressbar),
+        }
     }
 
-    /// Render to a [`RgbImage`].
+    /// Render to a [`RaytracedImage`].
     ///
     /// Tries to optimize `world` into a [`Bvh`], but falls back to the slower implementation if not possible (i.e. [`Bvh::new`] return [`BoundingBoxError`]).
     /// This function uses multithreading with the help of the [`rayon`] crate.
-    pub fn render(mut self) -> RgbImage {
-        // Progressbar
-        let bar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
-        bar.set_style(
-            ProgressStyle::with_template(
-                "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
-            )
-            .unwrap()
-            .progress_chars("#>-"),
-        );
+    pub fn render(mut self) -> RaytracedImage {
+        let colors = self.render_multithreaded();
 
-        let colors = self.render_multithreaded_bvh(Some(&bar));
-
-        let mut image = RgbImage::new(self.image_width.into(), self.image_height.into());
-        colors.into_iter().enumerate().for_each(|(index, color)| {
-            let i = index % self.image_width as usize;
-            let j = index / self.image_width as usize;
-            image.put_pixel(i as u32, j as u32, color.into());
-        });
-        image
+        RaytracedImage {
+            image: colors,
+            image_width: self.image_width,
+            image_height: self.image_height,
+        }
     }
 
-    /// Render to a [`RgbImage`] without using the optimization of [`Bvh`].
-    ///
-    /// Internal testing function.
-    #[allow(dead_code)]
-    pub(crate) fn render_without_bvh(mut self) -> RgbImage {
-        // Progressbar
-        let bar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
-        bar.set_style(
-            ProgressStyle::with_template(
-                "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
-            )
-            .unwrap()
-            .progress_chars("#>-"),
-        );
-
-        let colors = self.render_multithreaded_without_bvh(Some(&bar));
-
-        let mut image = RgbImage::new(self.image_width.into(), self.image_height.into());
-        colors.into_iter().enumerate().for_each(|(index, color)| {
-            let i = index % self.image_width as usize;
-            let j = index / self.image_width as usize;
-            image.put_pixel(i as u32, j as u32, color.into());
-        });
-        image
-    }
-
-    fn render_multithreaded_bvh(&mut self, bar: Option<&ProgressBar>) -> Vec<Color> {
+    fn render_multithreaded(&mut self) -> Vec<Color> {
         let bvh = match self.camera.time() {
             Some(time) => Bvh::new(self.world.clone(), time.0, time.1),
             None => Bvh::new(self.world.clone(), 0., 0.),
@@ -156,46 +124,7 @@ impl Raytracer {
                     (pixel_color.b() / self.samples_per_pixel as f32).sqrt(),
                 );
 
-                if let Some(bar) = bar {
-                    bar.inc(1);
-                }
-
-                *color = pixel_color;
-            });
-
-        colors
-    }
-
-    fn render_multithreaded_without_bvh(&mut self, bar: Option<&ProgressBar>) -> Vec<Color> {
-        let mut colors =
-            vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];
-
-        colors
-            .par_iter_mut()
-            .enumerate()
-            .for_each(|(index, color)| {
-                let mut rng = rand::thread_rng();
-                let i = index % self.image_width as usize;
-                let j = self.image_height as usize - index / self.image_width as usize - 1;
-
-                let mut pixel_color = color![0., 0., 0.];
-
-                for _ in 0..self.samples_per_pixel {
-                    let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
-                    let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
-                    pixel_color += Raytracer::ray_color_hittable(
-                        &self.world,
-                        self.camera.get_ray(u, v),
-                        self.max_depth,
-                    );
-                }
-                pixel_color = color!(
-                    (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.g() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.b() / self.samples_per_pixel as f32).sqrt(),
-                );
-
-                if let Some(bar) = bar {
+                if let Some(bar) = &self.progressbar {
                     bar.inc(1);
                 }
 
@@ -251,5 +180,42 @@ impl Raytracer {
             }
             HittableListOptions::Bvh(world) => Raytracer::ray_color_bvh(world, ray, depth),
         }
+    }
+}
+
+pub struct RaytracedImage {
+    image: Vec<Color>,
+    image_width: u16,
+    image_height: u16,
+}
+
+impl RaytracedImage {
+    /// Save the image.
+    ///
+    /// Defaults to [`image`] as the backend.
+    pub fn save<P: AsRef<Path>>(self, path: P) -> Result<(), ImageError> {
+        let image = self.into_image();
+        image.save(path)
+    }
+
+    /// Convert the image to a [`RgbImage`].
+    pub fn into_image(self) -> RgbImage {
+        let mut image = RgbImage::new(self.image_width.into(), self.image_height.into());
+        self.image
+            .into_iter()
+            .enumerate()
+            .for_each(|(index, color)| {
+                let i = index % self.image_width as usize;
+                let j = index / self.image_width as usize;
+                image.put_pixel(i as u32, j as u32, color.into());
+            });
+        image
+    }
+
+    /// Convert the image to a [`PPM`].
+    ///
+    /// Saving the image as an [`image`](RaytracedImage::into_image) should be preferred as other image formats are much smaller and the resulting [`RgbImage`] has more possible functions.
+    pub fn into_ppm(self) -> PPM {
+        PPM::new(self.image, self.image_width, self.image_height)
     }
 }
