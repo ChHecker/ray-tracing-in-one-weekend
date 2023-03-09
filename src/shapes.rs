@@ -1,11 +1,19 @@
-use crate::{hittable::Aabb, materials::Material, *};
+//! Collection of [hittable](`Hittable`) shapes .
+
+use crate::{hittable::Aabb, materials::Material, ray::Ray, *};
 use std::{fmt::Debug, sync::Arc};
 
+/// Zero-size trait to mark shapes as [stationary](Stationary) or [moving](Moving).
 pub trait Position: Debug {}
 
 #[derive(Debug)]
 pub struct Stationary {
     pub position: Point,
+}
+impl Stationary {
+    pub fn position(&self) -> Point {
+        self.position
+    }
 }
 impl Position for Stationary {}
 
@@ -23,6 +31,12 @@ impl Moving {
 }
 impl Position for Moving {}
 
+/// A sphere, either [stationary](Stationary) or [moving](Moving).
+///
+/// # Fields
+/// - `center`: Center of the sphere.
+/// - `radius`: Radius of the sphere.
+/// - `material`: Material of the sphere.
 #[derive(Debug)]
 pub struct Sphere<M: Material + 'static, P: Position> {
     center: P,
@@ -30,7 +44,18 @@ pub struct Sphere<M: Material + 'static, P: Position> {
     material: Arc<M>,
 }
 
+impl<M: Material, P: Position> Sphere<M, P> {
+    pub fn radius(&self) -> f32 {
+        self.radius
+    }
+
+    pub fn material(&self) -> Arc<M> {
+        self.material.clone()
+    }
+}
+
 impl<M: Material> Sphere<M, Stationary> {
+    /// Create a new [stationary](Stationary) [`Sphere`].
     pub fn new(center: Point, radius: f32, material: Arc<M>) -> Self {
         Self {
             center: Stationary { position: center },
@@ -39,6 +64,7 @@ impl<M: Material> Sphere<M, Stationary> {
         }
     }
 
+    /// Consume `self` and create a [moving](Moving) [`Camera`].
     pub fn with_time(
         self,
         position_end: Point,
@@ -54,11 +80,21 @@ impl<M: Material> Sphere<M, Stationary> {
             material: self.material,
         }
     }
+
+    pub fn position(&self) -> Point {
+        self.center.position()
+    }
+}
+
+impl<M: Material> Sphere<M, Moving> {
+    pub fn position(&self, time: f32) -> Point {
+        self.center.position(time)
+    }
 }
 
 impl<M: Material> Hittable for Sphere<M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let oc = ray.origin() - self.center.position;
+        let oc = ray.origin() - self.position();
         let a = ray.direction().norm_sq();
         let b_halves = oc.dot(&ray.direction());
         let c = oc.norm_sq() - self.radius.powi(2);
@@ -79,7 +115,7 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
         let point = ray.at(root);
         Some(HitRecord::from_ray(
             point,
-            (point - self.center.position) / self.radius,
+            (point - self.position()) / self.radius,
             root,
             self.material.clone(),
             ray,
@@ -88,15 +124,15 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(Aabb::new(
-            self.center.position - point![self.radius, self.radius, self.radius],
-            self.center.position + point![self.radius, self.radius, self.radius],
+            self.position() - point![self.radius, self.radius, self.radius],
+            self.position() + point![self.radius, self.radius, self.radius],
         ))
     }
 }
 
 impl<M: Material> Hittable for Sphere<M, Moving> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let oc = ray.origin() - self.center.position(ray.time());
+        let oc = ray.origin() - self.position(ray.time());
         let a = ray.direction().norm_sq();
         let b_halves = oc.dot(&ray.direction());
         let c = oc.norm_sq() - self.radius.powi(2);
@@ -117,7 +153,7 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
         let point = ray.at(root);
         Some(HitRecord::from_ray(
             point,
-            (point - self.center.position(ray.time())) / self.radius,
+            (point - self.position(ray.time())) / self.radius,
             root,
             self.material.clone(),
             ray,
@@ -126,42 +162,70 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
 
     fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         let aabb1 = Aabb::new(
-            self.center.position(time0) - point![self.radius, self.radius, self.radius],
-            self.center.position(time0) + point![self.radius, self.radius, self.radius],
+            self.position(time0) - point![self.radius, self.radius, self.radius],
+            self.position(time0) + point![self.radius, self.radius, self.radius],
         );
         let aabb2 = Aabb::new(
-            self.center.position(time1) - point![self.radius, self.radius, self.radius],
-            self.center.position(time1) + point![self.radius, self.radius, self.radius],
+            self.position(time1) - point![self.radius, self.radius, self.radius],
+            self.position(time1) + point![self.radius, self.radius, self.radius],
         );
         Some(Aabb::surrounding(&aabb1, &aabb2))
     }
 }
 
+/// A cylinder along the y axis.
+///
+/// Right now, the cylinder cannot move
+///
+/// # Fields
+/// - `center`: Center of the cylinder.
+/// - `radius`: Radius of the cylinder.
+/// - `height`: Height of the cylinder (from top to bottom, not from center to bottom).
+/// - `material`: Material of the cylinder.
 #[derive(Debug)]
-pub struct Cylinder<M: Material + 'static> {
-    center: Point,
+pub struct Cylinder<M: Material + 'static, P: Position> {
+    center: P,
     radius: f32,
     height: f32,
     material: Arc<M>,
 }
 
-impl<M: Material> Cylinder<M> {
+impl<M: Material, P: Position> Cylinder<M, P> {
+    pub fn radius(&self) -> f32 {
+        self.radius
+    }
+
+    pub fn height(&self) -> f32 {
+        self.height
+    }
+
+    pub fn material(&self) -> Arc<M> {
+        self.material.clone()
+    }
+}
+
+impl<M: Material> Cylinder<M, Stationary> {
+    /// Create a new [stationary](Stationary) [`Cylinder`].
     pub fn new(center: Point, radius: f32, height: f32, material: Arc<M>) -> Self {
         Self {
-            center,
+            center: Stationary { position: center },
             radius,
             height,
             material,
         }
     }
+
+    pub fn position(&self) -> Point {
+        self.center.position()
+    }
 }
 
-impl<M: Material> Hittable for Cylinder<M> {
+impl<M: Material> Hittable for Cylinder<M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = point!(
-            ray.origin().x() - self.center.x(),
+            ray.origin().x() - self.position().x(),
             0.,
-            ray.origin().z() - self.center.z(),
+            ray.origin().z() - self.position().z(),
         );
         let a = ray.direction().x().powi(2) + ray.direction().z().powi(2);
         let b_halves = oc.dot(&ray.direction());
@@ -181,8 +245,8 @@ impl<M: Material> Hittable for Cylinder<M> {
         let point1 = ray.at(root1);
         let point2 = ray.at(root2);
 
-        let upper_bound = self.center.y() + self.height / 2.;
-        let lower_bound = self.center.y() - self.height / 2.;
+        let upper_bound = self.position().y() + self.height / 2.;
+        let lower_bound = self.position().y() - self.height / 2.;
 
         let mut point: Point;
         let mut root: f32;
@@ -227,7 +291,7 @@ impl<M: Material> Hittable for Cylinder<M> {
             }
         }
 
-        let mut normal = (point - self.center) / self.radius;
+        let mut normal = (point - self.position()) / self.radius;
         normal = point!(normal.x(), 0., normal.z());
 
         Some(HitRecord::from_ray(
@@ -241,8 +305,8 @@ impl<M: Material> Hittable for Cylinder<M> {
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(Aabb::new(
-            self.center - point![self.radius, self.height / 2., self.radius],
-            self.center + point![self.radius, self.height / 2., self.radius],
+            self.position() - point![self.radius, self.height / 2., self.radius],
+            self.position() + point![self.radius, self.height / 2., self.radius],
         ))
     }
 }
