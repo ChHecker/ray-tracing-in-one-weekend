@@ -1,14 +1,13 @@
 //! A way to apply textures to shapes.
 
 use std::fmt::Debug;
-use std::sync::Arc;
 
 use crate::*;
 
 /// An abstraction over all textures.
 ///
 /// `Send + Sync` is necessary for multithreading.
-pub trait Texture: Debug + Send + Sync {
+pub trait Texture: Clone + Debug + Send + Sync {
     /// Calculate the color of the texture.
     ///
     /// # Parameters:
@@ -18,7 +17,7 @@ pub trait Texture: Debug + Send + Sync {
 }
 
 /// A solid color texture.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SolidColor {
     color: Color,
 }
@@ -36,14 +35,14 @@ impl Texture for SolidColor {
 }
 
 /// A checkerboard texture.
-#[derive(Debug)]
-pub struct CheckerTexture<S: Texture, T: Texture> {
-    texture_even: Arc<S>,
-    texture_odd: Arc<T>,
+#[derive(Clone, Debug)]
+pub struct CheckerTexture<'a, S: Texture, T: Texture> {
+    texture_even: &'a S,
+    texture_odd: &'a T,
 }
 
-impl<S: Texture, T: Texture> CheckerTexture<S, T> {
-    pub fn new(texture_even: Arc<S>, texture_odd: Arc<T>) -> Self {
+impl<'a, S: Texture, T: Texture> CheckerTexture<'a, S, T> {
+    pub fn new(texture_even: &'a S, texture_odd: &'a T) -> Self {
         Self {
             texture_even,
             texture_odd,
@@ -51,7 +50,7 @@ impl<S: Texture, T: Texture> CheckerTexture<S, T> {
     }
 }
 
-impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
+impl<'a, S: Texture, T: Texture> Texture for CheckerTexture<'a, S, T> {
     fn color_at(&self, u: f32, v: f32, hit_point: Point) -> Color {
         let sin_product =
             (10. * hit_point.x()).sin() * (10. * hit_point.y()).sin() * (10. * hit_point.z()).sin();

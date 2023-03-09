@@ -2,7 +2,6 @@
 
 use std::f32::consts::PI;
 use std::fmt::Debug;
-use std::sync::Arc;
 
 use crate::hittable::Aabb;
 use crate::materials::Material;
@@ -10,9 +9,9 @@ use crate::ray::Ray;
 use crate::*;
 
 /// Zero-size trait to mark shapes as [stationary](Stationary) or [moving](Moving).
-pub trait Position: Debug {}
+pub trait Position: Clone + Debug {}
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Stationary {
     pub position: Point,
 }
@@ -23,7 +22,7 @@ impl Stationary {
 }
 impl Position for Stationary {}
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Moving {
     pub position: (Point, Point),
     pub time: (f32, f32),
@@ -43,20 +42,20 @@ impl Position for Moving {}
 /// - `center`: Center of the sphere.
 /// - `radius`: Radius of the sphere.
 /// - `material`: Material of the sphere.
-#[derive(Debug)]
-pub struct Sphere<M: Material + 'static, P: Position> {
+#[derive(Clone, Debug)]
+pub struct Sphere<'a, M: Material, P: Position> {
     center: P,
     radius: f32,
-    material: Arc<M>,
+    material: &'a M,
 }
 
-impl<M: Material, P: Position> Sphere<M, P> {
+impl<'a, M: Material, P: Position> Sphere<'a, M, P> {
     pub fn radius(&self) -> f32 {
         self.radius
     }
 
-    pub fn material(&self) -> Arc<M> {
-        self.material.clone()
+    pub fn material(&self) -> &'a M {
+        self.material
     }
 
     /// Get the surface coordinates (u, v) on the sphere from a [`Point`].
@@ -70,9 +69,9 @@ impl<M: Material, P: Position> Sphere<M, P> {
     }
 }
 
-impl<M: Material> Sphere<M, Stationary> {
+impl<'a, M: Material> Sphere<'a, M, Stationary> {
     /// Create a new [stationary](Stationary) [`Sphere`].
-    pub fn new(center: Point, radius: f32, material: Arc<M>) -> Self {
+    pub fn new(center: Point, radius: f32, material: &'a M) -> Self {
         Self {
             center: Stationary { position: center },
             radius,
@@ -86,7 +85,7 @@ impl<M: Material> Sphere<M, Stationary> {
         position_end: Point,
         time_start: f32,
         time_end: f32,
-    ) -> Sphere<M, Moving> {
+    ) -> Sphere<'a, M, Moving> {
         Sphere {
             center: Moving {
                 position: (self.center.position, position_end),
@@ -102,13 +101,13 @@ impl<M: Material> Sphere<M, Stationary> {
     }
 }
 
-impl<M: Material> Sphere<M, Moving> {
+impl<'a, M: Material> Sphere<'a, M, Moving> {
     pub fn position(&self, time: f32) -> Point {
         self.center.position(time)
     }
 }
 
-impl<M: Material> Hittable for Sphere<M, Stationary> {
+impl<'a, M: Material> Hittable for Sphere<'a, M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position();
         let a = ray.direction().norm_sq();
@@ -138,7 +137,7 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
             v,
             normal,
             root,
-            self.material.clone(),
+            self.material,
             ray,
         ))
     }
@@ -151,7 +150,7 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
     }
 }
 
-impl<M: Material> Hittable for Sphere<M, Moving> {
+impl<'a, M: Material> Hittable for Sphere<'a, M, Moving> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position(ray.time());
         let a = ray.direction().norm_sq();
@@ -181,7 +180,7 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
             v,
             normal,
             root,
-            self.material.clone(),
+            self.material,
             ray,
         ))
     }
@@ -208,15 +207,15 @@ impl<M: Material> Hittable for Sphere<M, Moving> {
 /// - `radius`: Radius of the cylinder.
 /// - `height`: Height of the cylinder (from top to bottom, not from center to bottom).
 /// - `material`: Material of the cylinder.
-#[derive(Debug)]
-pub struct Cylinder<M: Material + 'static, P: Position> {
+#[derive(Clone, Debug)]
+pub struct Cylinder<'a, M: Material, P: Position> {
     center: P,
     radius: f32,
     height: f32,
-    material: Arc<M>,
+    material: &'a M,
 }
 
-impl<M: Material, P: Position> Cylinder<M, P> {
+impl<'a, M: Material, P: Position> Cylinder<'a, M, P> {
     pub fn radius(&self) -> f32 {
         self.radius
     }
@@ -225,14 +224,14 @@ impl<M: Material, P: Position> Cylinder<M, P> {
         self.height
     }
 
-    pub fn material(&self) -> Arc<M> {
-        self.material.clone()
+    pub fn material(&self) -> &'a M {
+        self.material
     }
 }
 
-impl<M: Material> Cylinder<M, Stationary> {
+impl<'a, M: Material> Cylinder<'a, M, Stationary> {
     /// Create a new [stationary](Stationary) [`Cylinder`].
-    pub fn new(center: Point, radius: f32, height: f32, material: Arc<M>) -> Self {
+    pub fn new(center: Point, radius: f32, height: f32, material: &'a M) -> Self {
         Self {
             center: Stationary { position: center },
             radius,
@@ -246,7 +245,7 @@ impl<M: Material> Cylinder<M, Stationary> {
     }
 }
 
-impl<M: Material> Hittable for Cylinder<M, Stationary> {
+impl<'a, M: Material> Hittable for Cylinder<'a, M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = point!(
             ray.origin().x() - self.position().x(),
@@ -326,7 +325,7 @@ impl<M: Material> Hittable for Cylinder<M, Stationary> {
             0.,
             normal,
             root,
-            self.material.clone(),
+            self.material,
             ray,
         ))
     }

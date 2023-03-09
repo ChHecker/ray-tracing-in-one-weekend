@@ -1,12 +1,11 @@
 //! Collection of materials of [`Hittable`]s.
 
 use std::fmt::Debug;
-use std::sync::Arc;
 
 use rand::Rng;
 
 use crate::ray::Ray;
-use crate::textures::{SolidColor, Texture};
+use crate::textures::Texture;
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.
@@ -21,28 +20,18 @@ pub trait Material: Debug + Send + Sync {
 ///
 /// # Fields
 /// - `albedo`: Color of the [`Lambertian`].
-#[derive(Debug)]
-pub struct Lambertian<T: Texture> {
-    albedo: Arc<T>,
+#[derive(Clone, Debug)]
+pub struct Lambertian<'a, T: Texture> {
+    albedo: &'a T,
 }
 
-impl<T: Texture> Lambertian<T> {
-    pub fn new(albedo: Arc<T>) -> Self {
+impl<'a, T: Texture> Lambertian<'a, T> {
+    pub fn new(albedo: &'a T) -> Self {
         Self { albedo }
     }
 }
 
-impl Lambertian<SolidColor> {
-    /// Create a new [`Lambertian`] from a color.
-    ///
-    /// This does however not offer the option to use one [`Texture`] for multiple [`Material`]s.
-    pub fn solid_color(albedo: Color) -> Self {
-        let albedo = Arc::new(SolidColor::new(albedo));
-        Self { albedo }
-    }
-}
-
-impl<T: Texture> Material for Lambertian<T> {
+impl<'a, T: Texture> Material for Lambertian<'a, T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut scatter_direction = hit.normal() + Point::random_unit_vector();
 
@@ -59,28 +48,20 @@ impl<T: Texture> Material for Lambertian<T> {
 }
 
 /// A fuzzy reflective material (metal).
-#[derive(Debug)]
-pub struct Metal<T: Texture> {
-    albedo: Arc<T>,
+#[derive(Clone, Debug)]
+pub struct Metal<'a, T: Texture> {
+    albedo: &'a T,
     fuzz: f32,
 }
 
-impl<T: Texture> Metal<T> {
-    pub fn new(albedo: Arc<T>, fuzz: f32) -> Self {
+impl<'a, T: Texture> Metal<'a, T> {
+    pub fn new(albedo: &'a T, fuzz: f32) -> Self {
         let fuzz = if fuzz < 1. { fuzz } else { 1. };
         Self { albedo, fuzz }
     }
 }
 
-impl Metal<SolidColor> {
-    pub fn solid_color(albedo: Color, fuzz: f32) -> Self {
-        let fuzz = if fuzz < 1. { fuzz } else { 1. };
-        let albedo = Arc::new(SolidColor::new(albedo));
-        Self { albedo, fuzz }
-    }
-}
-
-impl<T: Texture> Material for Metal<T> {
+impl<'a, T: Texture> Material for Metal<'a, T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let reflected = ray.direction().unit_vector().reflect(&hit.normal());
         let scattered = Ray::new(
@@ -99,7 +80,7 @@ impl<T: Texture> Material for Metal<T> {
 }
 
 /// A transparent material.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Dielectric {
     index_of_refraction: f32,
 }

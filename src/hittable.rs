@@ -6,7 +6,6 @@
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
 use std::ops::Index;
-use std::sync::Arc;
 
 use rand::Rng;
 
@@ -14,8 +13,6 @@ use crate::materials::Material;
 use crate::ray::Ray;
 use crate::*;
 
-// TODO: Replace alls Arcs by references and benchmark
-type MaterialArc = Arc<dyn Material>;
 /// A record for when a [Ray] hits something.
 ///
 /// This struct should be returned when a [Hittable] object is hit by a [Ray] as it contains all necessary information to deal with this.
@@ -28,17 +25,17 @@ type MaterialArc = Arc<dyn Material>;
 /// - `front_face`: Whether the hit faces the front or the back of the [Hittable].
 /// - `material`: [Material] that was hit.
 #[derive(Clone, Debug)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     point: Point,
     u: f32,
     v: f32,
     normal: Point,
     t: f32,
     front_face: bool,
-    material: MaterialArc,
+    material: &'a dyn Material,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     /// Create a hit record.
     pub fn new(
         point: Point,
@@ -47,7 +44,7 @@ impl HitRecord {
         normal: Point,
         t: f32,
         front_face: bool,
-        material: MaterialArc,
+        material: &'a dyn Material,
     ) -> Self {
         HitRecord {
             point,
@@ -69,7 +66,7 @@ impl HitRecord {
         v: f32,
         normal: Point,
         t: f32,
-        material: MaterialArc,
+        material: &'a dyn Material,
         ray: Ray,
     ) -> Self {
         let (front_face, normal) = HitRecord::face_normal(ray, normal);
@@ -108,8 +105,8 @@ impl HitRecord {
         self.front_face
     }
 
-    pub fn material(&self) -> MaterialArc {
-        self.material.clone()
+    pub fn material(&self) -> &'a dyn Material {
+        self.material
     }
 
     /// Calculate whether the [Ray] hit the front or the back of the surface.
@@ -165,28 +162,29 @@ pub trait Hittable: Debug + Send + Sync {
     }
 }
 
-type HittableArc = Arc<dyn Hittable>;
+type HittableBox<'a> = Box<dyn Hittable + 'a>;
+
 /// Stores a list of [`Hittable`]s.
 ///
 /// This also implements [`Hittable`] in order to be able to calulcate hits for all objects it contains, as well as calculating a [Aabb] that encompasses all objects.
 ///
 /// # Fields
 /// - `hittables`: [Vector](Vec) of [`Arc`]s of [`Hittable`]s.
-#[derive(Clone, Default, Debug)]
-pub struct HittableList {
-    hittables: Vec<HittableArc>,
+#[derive(Default, Debug)]
+pub struct HittableList<'a> {
+    hittables: Vec<HittableBox<'a>>,
 }
 
-impl HittableList {
+impl<'a> HittableList<'a> {
     /// Create an empty [`HittableList`].
     pub fn new() -> Self {
         Self {
-            hittables: Vec::<HittableArc>::new(),
+            hittables: Vec::new(),
         }
     }
 
     /// Push a new [`Hittable`] to the end.
-    pub fn push(&mut self, hittable: HittableArc) {
+    pub fn push(&mut self, hittable: HittableBox<'a>) {
         self.hittables.push(hittable);
     }
 
@@ -206,7 +204,7 @@ impl HittableList {
     }
 
     /// Remove the last [`Hittable`] and return it.
-    fn pop(&mut self) -> Option<HittableArc> {
+    fn pop(&mut self) -> Option<HittableBox<'a>> {
         self.hittables.pop()
     }
 
@@ -223,27 +221,28 @@ impl HittableList {
 
     /// Split at `mid` and return both halves.
     fn split_at(self, mid: usize) -> (Self, Self) {
-        let (left, right) = self.hittables.split_at(mid);
-        (
-            Self {
-                hittables: left.to_vec(),
-            },
-            Self {
-                hittables: right.to_vec(),
-            },
-        )
+        let mut left = Vec::<HittableBox>::new();
+        let mut right = Vec::<HittableBox>::new();
+        for (i, hittable) in self.hittables.into_iter().enumerate() {
+            if i < mid {
+                left.push(hittable);
+            } else {
+                right.push(hittable);
+            }
+        }
+        (Self { hittables: left }, Self { hittables: right })
     }
 }
 
-impl Index<usize> for HittableList {
-    type Output = HittableArc;
+impl<'a> Index<usize> for HittableList<'a> {
+    type Output = HittableBox<'a>;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.hittables[index]
     }
 }
 
-impl Hittable for HittableList {
+impl<'a> Hittable for HittableList<'a> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
@@ -377,6 +376,15 @@ impl fmt::Display for BoundingBoxError {
     }
 }
 
+/// Possible nodes in a [`Bvh`].
+///
+/// [`Bvh`]s are binary trees and might therefore sometimes end with only one node. With this enum, [`Option`] is not needed.
+#[derive(Debug)]
+enum BvhNode<'a> {
+    One(HittableBox<'a>),
+    Two(HittableBox<'a>, HittableBox<'a>),
+}
+
 /// Bounding Volume Hierarchy.
 ///
 /// This sorts all [`Hittable`]s into a binary tree by a random axis per level (see ['sort_by_box'](HittableList::sort_by_box)).
@@ -387,13 +395,12 @@ impl fmt::Display for BoundingBoxError {
 /// - `left`: Left subtree/node.
 /// - `right`: Right subtree/node.
 #[derive(Debug)]
-pub struct Bvh {
+pub struct Bvh<'a> {
     aabb: Aabb,
-    left: Arc<dyn Hittable>,
-    right: Arc<dyn Hittable>,
+    subnode: BvhNode<'a>,
 }
 
-impl Bvh {
+impl<'a> Bvh<'a> {
     /// Create a new [`Bvh`] from a [`HittableList`] that will be consumed as well as a time range.
     ///
     /// This works recursively. If there is only one or two elements left in the list, they are added to the two subnodes. In all other cases, the list [is sorted by a random axis](HittableList::sort_by_box), split in half, and propagated down.
@@ -403,10 +410,55 @@ impl Bvh {
     /// - `time0`: Starting time.
     /// - `time1`: Ending time.
     pub fn new(
-        mut hittables: HittableList,
+        mut hittables: HittableList<'a>,
         time0: f32,
         time1: f32,
     ) -> Result<Self, BoundingBoxError> {
+        Bvh::check_hittable_list(&hittables)?;
+
+        let mut rand = rand::thread_rng();
+
+        let subnode: BvhNode;
+        let axis: u8 = rand.gen_range(0..=2);
+
+        if hittables.len() == 1 {
+            let elem = hittables.pop().unwrap();
+            subnode = BvhNode::One(elem);
+        } else if hittables.len() == 2 {
+            let last = hittables.pop().unwrap();
+            let first = hittables.pop().unwrap();
+            match first.cmp_box(&*last, axis) {
+                Ordering::Less | Ordering::Equal => {
+                    subnode = BvhNode::Two(first, last);
+                }
+                Ordering::Greater => {
+                    subnode = BvhNode::Two(last, first);
+                }
+            }
+        } else {
+            hittables.sort_by_box(axis);
+
+            let mid = hittables.len() / 2;
+            let split = hittables.split_at(mid);
+
+            let left = Box::new(Bvh::new(split.0, time0, time1)?);
+            let right = Box::new(Bvh::new(split.1, time0, time1)?);
+
+            subnode = BvhNode::Two(left, right);
+        }
+
+        let aabb = match &subnode {
+            BvhNode::One(child) => child.bounding_box(time0, time1).ok_or(BoundingBoxError)?,
+            BvhNode::Two(left, right) => Aabb::surrounding(
+                &left.bounding_box(time0, time1).ok_or(BoundingBoxError)?,
+                &right.bounding_box(time0, time1).ok_or(BoundingBoxError)?,
+            ),
+        };
+
+        Ok(Self { aabb, subnode })
+    }
+
+    pub fn check_hittable_list(hittables: &HittableList) -> Result<(), BoundingBoxError> {
         if hittables.is_empty() {
             return Err(BoundingBoxError);
         }
@@ -417,61 +469,29 @@ impl Bvh {
             }
         }
 
-        let mut rand = rand::thread_rng();
-
-        let (left, right): (Arc<dyn Hittable>, Arc<dyn Hittable>);
-        let axis: u8 = rand.gen_range(0..=2);
-
-        if hittables.len() == 1 {
-            let elem = hittables.pop().unwrap();
-            left = elem.clone();
-            right = elem;
-        } else if hittables.len() == 2 {
-            let last = hittables.pop().unwrap();
-            let first = hittables.pop().unwrap();
-            match first.cmp_box(&*last, axis) {
-                Ordering::Less | Ordering::Equal => {
-                    left = first;
-                    right = last;
-                }
-                Ordering::Greater => {
-                    left = last;
-                    right = first;
-                }
-            }
-        } else {
-            hittables.sort_by_box(axis);
-
-            let mid = hittables.len() / 2;
-            let split = hittables.split_at(mid);
-
-            left = Arc::new(Bvh::new(split.0, time0, time1)?);
-            right = Arc::new(Bvh::new(split.1, time0, time1)?);
-        }
-
-        let aabb = Aabb::surrounding(
-            &left.bounding_box(time0, time1).ok_or(BoundingBoxError)?,
-            &right.bounding_box(time0, time1).ok_or(BoundingBoxError)?,
-        );
-
-        Ok(Self { aabb, left, right })
+        Ok(())
     }
 }
 
-impl Hittable for Bvh {
+impl<'a> Hittable for Bvh<'a> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         if !self.aabb.hit(ray, t_min, t_max) {
             return None;
         }
 
-        let hit_left = self.left.hit(ray, t_min, t_max);
-        let t_max = match &hit_left {
-            Some(hit_record) => hit_record.t,
-            None => t_max,
-        };
-        let hit_right = self.right.hit(ray, t_min, t_max);
+        match &self.subnode {
+            BvhNode::One(child) => child.hit(ray, t_min, t_max),
+            BvhNode::Two(left, right) => {
+                let hit_left = left.hit(ray, t_min, t_max);
+                let t_max = match &hit_left {
+                    Some(hit_record) => hit_record.t,
+                    None => t_max,
+                };
+                let hit_right = right.hit(ray, t_min, t_max);
 
-        hit_right.or(hit_left)
+                hit_right.or(hit_left)
+            }
+        }
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -483,8 +503,8 @@ impl Hittable for Bvh {
 ///
 /// Both [`HittableList`] and [`Bvh`] can store [`Hittable`]s. Latter is faster, but not always possible (see [`BoundingBoxError`], e.g. an infinite plane).
 pub enum HittableListOptions<'a> {
-    HittableList(&'a HittableList),
-    Bvh(&'a Bvh),
+    HittableList(HittableList<'a>),
+    Bvh(Bvh<'a>),
 }
 
 #[cfg(test)]
@@ -496,25 +516,16 @@ mod test {
 
     #[test]
     fn bvh_hit() {
-        let left = Arc::new(Sphere::new(
-            point![-2., 0., -1.],
-            1.,
-            Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
-                1., 1., 1.
-            ])))),
-        ));
-        let right = Arc::new(Sphere::new(
-            point![2., 0., -1.],
-            1.,
-            Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
-                1., 1., 1.
-            ])))),
-        ));
+        let black = SolidColor::new(color![1., 1., 1.]);
+        let black_lambertian = Lambertian::new(&black);
+        let left = Box::new(Sphere::new(point![-2., 0., -1.], 1., &black_lambertian));
+        let right = Box::new(Sphere::new(point![2., 0., -1.], 1., &black_lambertian));
         let aabb = Aabb::surrounding(
             &left.bounding_box(0., 0.).unwrap(),
             &right.bounding_box(0., 0.).unwrap(),
         );
-        let bvh = Bvh { aabb, left, right };
+        let subnode = BvhNode::Two(left, right);
+        let bvh = Bvh { aabb, subnode };
 
         let ray_hit_left = Ray::new(point![0., 0., 0.], point![-2., 0., -1.]);
         let hit_left = bvh.hit(ray_hit_left, 0., f32::INFINITY);
