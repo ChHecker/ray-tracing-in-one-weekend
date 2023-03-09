@@ -1,15 +1,14 @@
 //! Central struct for creating a ray tracer and rendering an image.
 
-use crate::{
-    hittable::{BoundingBoxError, Bvh, HittableListOptions},
-    ppm::PPM,
-    ray::Ray,
-    *,
-};
 use image::RgbImage;
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use rayon::prelude::*;
+
+use crate::hittable::{BoundingBoxError, Bvh, HittableListOptions};
+use crate::ppm::PPM;
+use crate::ray::Ray;
+use crate::*;
 
 /// Central ray tracing struct.
 ///

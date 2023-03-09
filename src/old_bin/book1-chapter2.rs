@@ -1,5 +1,7 @@
-use ray_tracing_in_one_weekend::{ppm::*, vec3::*};
 use std::path::Path;
+
+use ray_tracing_in_one_weekend::ppm::*;
+use ray_tracing_in_one_weekend::vec3::*;
 
 fn main() {
     let mut ppm = Vec::<Color>::new();

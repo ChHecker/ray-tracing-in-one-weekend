@@ -3,15 +3,16 @@
 //! All objects that can be hit by [`Ray`]s and encompassed by [axis-aligned bounding boxes](Aabb) should implement [`Hittable`]. This not only includes shapes, but also more abstract objects like [lists of shapes](HittableList).
 //! This also provides a [hit record](HitRecord) for when [Ray]s hit something.
 
-use crate::*;
-use crate::{materials::Material, ray::Ray};
+use std::cmp::Ordering;
+use std::fmt::{self, Debug};
+use std::ops::Index;
+use std::sync::Arc;
+
 use rand::Rng;
-use std::{
-    cmp::Ordering,
-    fmt::{self, Debug},
-    ops::Index,
-    sync::Arc,
-};
+
+use crate::materials::Material;
+use crate::ray::Ray;
+use crate::*;
 
 type MaterialArc = Arc<dyn Material>;
 /// A record for when a [Ray] hits something.

@@ -1,8 +1,10 @@
+use std::path::Path;
+use std::sync::Arc;
+
 use indicatif::ProgressBar;
 use rand::Rng;
 use ray_tracing_in_one_weekend::*;
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
-use std::{path::Path, sync::Arc};
 
 pub fn ray_color(world: &HittableList, ray: &Ray, depth: usize) -> Color {
     if depth == 0 {
