@@ -48,7 +48,7 @@ fn amogus(world: &mut HittableList) {
     let visor = Sphere::new(
         point![0., 4., 0.],
         0.8,
-        Arc::new(Metal::new(color![0.3, 0.3, 1.], 5.)),
+        Arc::new(Metal::solid_color(color![0.3, 0.3, 1.], 5.)),
     );
     world.push(Arc::new(visor));
 
