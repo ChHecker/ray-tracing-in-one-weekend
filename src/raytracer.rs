@@ -24,7 +24,7 @@ use crate::*;
 /// - `image_height`: Height of the resulting image.
 /// - `samples_per_pixel`: How many samples to take for each pixel for the purpose of anti-aliasing.
 /// - `max_depth`: How often a [`Ray`] should bounce at most.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Raytracer {
     pub world: HittableList,
     camera: Camera,

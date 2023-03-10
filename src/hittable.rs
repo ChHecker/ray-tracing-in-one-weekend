@@ -121,11 +121,33 @@ impl<'a> HitRecord<'a> {
     }
 }
 
+type HittableBox = Box<dyn Hittable>;
+
+/// Allows for cloning [`Hittable`]s.
+pub trait HittableClone {
+    fn box_clone(&self) -> HittableBox;
+}
+
+impl<T> HittableClone for T
+where
+    T: 'static + Hittable + Clone,
+{
+    fn box_clone(&self) -> HittableBox {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for HittableBox {
+    fn clone(&self) -> HittableBox {
+        self.box_clone()
+    }
+}
+
 /// An abstraction over all objects that can be hit by [Ray]s.
 ///
 /// All objects that can be hit by [`Ray`]s and encompassed by [axis-aligned bounding boxes](Aabb) should implement [`Hittable`]. This not only includes shapes, but also more abstract objects like [lists of shapes](HittableList).
 /// `Send + Sync` is necessary for multithreading.
-pub trait Hittable: Debug + Send + Sync {
+pub trait Hittable: Debug + HittableClone + Send + Sync {
     /// Check whether a [Ray] hits the object inside a allowed parameter range.
     ///
     /// If the [Ray] does not hit the object, returns `None`. If it does, all necessary information are saved in the return [`HitRecord`].
@@ -162,15 +184,11 @@ pub trait Hittable: Debug + Send + Sync {
     }
 }
 
-type HittableBox = Box<dyn Hittable>;
-
 /// Stores a list of [`Hittable`]s.
-///
-/// This also implements [`Hittable`] in order to be able to calulcate hits for all objects it contains, as well as calculating a [Aabb] that encompasses all objects.
 ///
 /// # Fields
 /// - `hittables`: [Vector](Vec) of [`Arc`]s of [`Hittable`]s.
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct HittableList {
     hittables: Vec<HittableBox>,
 }
@@ -201,6 +219,40 @@ impl HittableList {
     /// Length of the [`HittableList`].
     pub fn len(&self) -> usize {
         self.hittables.len()
+    }
+
+    pub fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        let mut hit_record_final: Option<HitRecord> = None;
+        let mut closest_so_far = t_max;
+
+        for hittable in &self.hittables {
+            if let Some(hit_record) = hittable.hit(ray, t_min, closest_so_far) {
+                closest_so_far = hit_record.t();
+                hit_record_final = Some(hit_record);
+            }
+        }
+
+        hit_record_final
+    }
+
+    pub fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
+        if self.hittables.is_empty() {
+            return None;
+        }
+
+        let mut aabb_out: Option<Aabb> = None;
+
+        for hittable in &self.hittables {
+            match hittable.bounding_box(time0, time1) {
+                Some(aabb_hit) => match aabb_out {
+                    None => aabb_out = Some(aabb_hit),
+                    Some(aabb) => aabb_out = Some(Aabb::surrounding(&aabb, &aabb_hit)),
+                },
+                None => return None,
+            }
+        }
+
+        aabb_out
     }
 
     /// Remove the last [`Hittable`] and return it.
@@ -239,42 +291,6 @@ impl Index<usize> for HittableList {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.hittables[index]
-    }
-}
-
-impl Hittable for HittableList {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
-        let mut hit_record_final: Option<HitRecord> = None;
-        let mut closest_so_far = t_max;
-
-        for hittable in &self.hittables {
-            if let Some(hit_record) = hittable.hit(ray, t_min, closest_so_far) {
-                closest_so_far = hit_record.t();
-                hit_record_final = Some(hit_record);
-            }
-        }
-
-        hit_record_final
-    }
-
-    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
-        if self.hittables.is_empty() {
-            return None;
-        }
-
-        let mut aabb_out: Option<Aabb> = None;
-
-        for hittable in &self.hittables {
-            match hittable.bounding_box(time0, time1) {
-                Some(aabb_hit) => match aabb_out {
-                    None => aabb_out = Some(aabb_hit),
-                    Some(aabb) => aabb_out = Some(Aabb::surrounding(&aabb, &aabb_hit)),
-                },
-                None => return None,
-            }
-        }
-
-        aabb_out
     }
 }
 
@@ -379,7 +395,7 @@ impl fmt::Display for BoundingBoxError {
 /// Possible nodes in a [`Bvh`].
 ///
 /// [`Bvh`]s are binary trees and might therefore sometimes end with only one node. With this enum, [`Option`] is not needed.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum BvhNode {
     One(HittableBox),
     Two(HittableBox, HittableBox),
@@ -394,7 +410,7 @@ enum BvhNode {
 /// - `aabb`: [`Aabb`] of the subtree/node.
 /// - `left`: Left subtree/node.
 /// - `right`: Right subtree/node.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Bvh {
     aabb: Aabb,
     subnode: BvhNode,
