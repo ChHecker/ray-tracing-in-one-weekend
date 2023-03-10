@@ -3,6 +3,7 @@
 use std::f32::consts::PI;
 use std::fmt::Debug;
 
+use crate::hitrecord::HitRecord;
 use crate::hittable::Aabb;
 use crate::materials::Material;
 use crate::ray::Ray;

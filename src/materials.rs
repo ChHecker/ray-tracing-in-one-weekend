@@ -4,6 +4,7 @@ use std::fmt::Debug;
 
 use rand::Rng;
 
+use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
 use crate::*;

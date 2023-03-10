@@ -8,6 +8,7 @@ use std::ops::Index;
 
 use rand::Rng;
 
+use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::*;
 
