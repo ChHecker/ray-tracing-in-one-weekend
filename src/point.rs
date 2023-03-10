@@ -68,7 +68,7 @@ impl Point {
     /// ```
     /// # use ray_tracing_in_one_weekend::{*, vec3::*};
     /// let v = point![1., 2., 3.];
-    /// assert_eq!(v.norm_sq(), (14.).sqrt())
+    /// assert_eq!(v.norm(), (14f32).sqrt())
     /// ```
     pub fn norm(&self) -> f32 {
         f32::sqrt(self.dot(self))
@@ -335,12 +335,6 @@ mod tests {
     fn div() {
         let v = point![1., 2., 3.];
         assert_eq!(v / 2., point![0.5, 1., 1.5]);
-    }
-
-    #[test]
-    fn abs() {
-        let v = point![1., 2., 3.];
-        assert_eq!(v.norm(), f32::sqrt(14.))
     }
 
     #[test]

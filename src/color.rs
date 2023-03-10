@@ -217,3 +217,42 @@ pub const GREY: Color = Color(0.5, 0.5, 0.5);
 pub const RED: Color = Color(1., 0., 0.);
 pub const GREEN: Color = Color(0., 1., 0.);
 pub const BLUE: Color = Color(0., 0., 1.);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add() {
+        let v1 = color![1., 2., 3.];
+        let v2 = color![4., 5., 6.];
+        assert_eq!(v1 + v2, color![5., 7., 9.])
+    }
+
+    #[test]
+    fn sub() {
+        let v1 = color![1., 2., 3.];
+        let v2 = color![4., 5., 6.];
+        assert_eq!(v2 - v1, color![3., 3., 3.])
+    }
+
+    #[test]
+    fn mul() {
+        let v = color![1., 2., 3.];
+        assert_eq!(3. * v, v * 3.);
+        assert_eq!(3. * v, color![3., 6., 9.]);
+    }
+
+    #[test]
+    fn div() {
+        let v = color![1., 2., 3.];
+        assert_eq!(v / 2., color![0.5, 1., 1.5]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn index() {
+        let v = color![1., 2., 3.];
+        v[3];
+    }
+}
