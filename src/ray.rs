@@ -1,6 +1,6 @@
 //! A simple ray of light.
 
-use crate::vec3::Point;
+use crate::point::Point;
 
 /// A ray starting at `origin` at `time` pointing in `direction`.
 ///

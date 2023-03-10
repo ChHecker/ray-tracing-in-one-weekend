@@ -4,7 +4,7 @@ use std::io::Write;
 use std::path::Path;
 use std::{fs, io};
 
-use crate::vec3::Color;
+use crate::color::Color;
 
 /// Portable Pixmap image format (`.ppm`) writer struct.
 ///
