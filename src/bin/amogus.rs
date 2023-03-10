@@ -1,8 +1,8 @@
 use std::path::Path;
 
+use ray_tracing_in_one_weekend::color::{GREEN, RED};
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
-use ray_tracing_in_one_weekend::vec3::{GREEN, RED};
 use ray_tracing_in_one_weekend::*;
 
 fn amogus(world: &mut HittableList) {
