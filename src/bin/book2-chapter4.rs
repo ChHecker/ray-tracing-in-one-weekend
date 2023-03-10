@@ -1,17 +1,17 @@
 use std::path::Path;
 
 use rand::Rng;
+use ray_tracing_in_one_weekend::color::{BLACK, WHITE};
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
 use ray_tracing_in_one_weekend::textures::*;
 use ray_tracing_in_one_weekend::*;
 
+#[allow(dead_code)]
 fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();
 
-    let texture_even = SolidColor::new(color![1., 1., 1.]);
-    let texture_odd = SolidColor::new(color![0., 0., 0.]);
-    let ground_material = Lambertian::new(CheckerTexture::new(texture_even, texture_odd));
+    let ground_material = Lambertian::new(CheckerTexture::solid_colors(WHITE, BLACK));
     let ground_sphere = Sphere::new(point![0., -1000., 0.], 1000., ground_material);
     world.push(ground_sphere);
 
@@ -56,6 +56,28 @@ fn random_world(world: &mut HittableList) {
     world.push(sphere3);
 }
 
+#[allow(dead_code)]
+fn checkerboard_world(world: &mut HittableList) {
+    let checker = CheckerTexture::solid_colors(WHITE, BLACK);
+
+    world.push(Sphere::new(
+        point![0., -10., 0.],
+        10.,
+        Lambertian::new(checker.clone()),
+    ));
+    world.push(Sphere::new(
+        point![0., 10., 0.],
+        10.,
+        Lambertian::new(checker),
+    ));
+}
+
+#[allow(dead_code)]
+enum Scene {
+    Random,
+    Checkerboard,
+}
+
 fn main() {
     // Image
     let aspect_ratio = 16. / 10.;
@@ -87,10 +109,18 @@ fn main() {
         max_depth,
     )
     .with_progressbar();
-    random_world(&mut raytracer.world);
 
-    raytracer
-        .render()
-        .save(&Path::new("images/book2-chapter3.png"))
-        .unwrap();
+    let scene = Scene::Random;
+    let path = match scene {
+        Scene::Random => {
+            random_world(&mut raytracer.world);
+            Path::new("images/book2-chapter4-random.png")
+        }
+        Scene::Checkerboard => {
+            checkerboard_world(&mut raytracer.world);
+            Path::new("images/book2-chapter4-checkerboard.png")
+        }
+    };
+
+    raytracer.render().save(path).unwrap();
 }
