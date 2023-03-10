@@ -56,8 +56,7 @@ impl Raytracer {
 
     /// Consume `self` and add a progressbar.
     pub fn with_progressbar(self) -> Self {
-        let progressbar =
-            ProgressBar::new((self.image_height * self.image_width).try_into().unwrap());
+        let progressbar = ProgressBar::new(self.image_height as u64 * self.image_width as u64);
         progressbar.set_style(
             ProgressStyle::with_template(
                 "{spinner:.green} [{elapsed}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})",
