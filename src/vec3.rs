@@ -68,13 +68,22 @@ impl Color {
     }
 
     /// Formats the [`Color`] as a [`String`], converting the `f32` RGB values to `u8`.
-    pub fn to_color_str(&self) -> String {
+    pub(crate) fn to_color_str(&self) -> String {
         format!(
             "{} {} {}",
             (256. * self.r().clamp(0., 0.999)) as u8,
             (256. * self.g().clamp(0., 0.999)) as u8,
             (256. * self.b().clamp(0., 0.999)) as u8
         )
+    }
+
+    /// Converts to an [`u8`] array.
+    pub(crate) fn to_rgb_array(&self) -> [u8; 3] {
+        [
+            (256. * self.r().clamp(0., 0.999)) as u8,
+            (256. * self.g().clamp(0., 0.999)) as u8,
+            (256. * self.b().clamp(0., 0.999)) as u8,
+        ]
     }
 }
 

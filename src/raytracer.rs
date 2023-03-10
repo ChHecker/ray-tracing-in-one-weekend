@@ -17,15 +17,16 @@ use crate::*;
 /// This struct allows setting attributes of the ray tracer, creating the world, and then rendering and saving it.
 ///
 /// # Fields
-/// - `world`: World of objects. Will be created automatically and not set manually.
+/// - `world`: World of objects. Will be created automatically.
+/// - `resources`: Collection of textures and materials. Will be created automatically.
 /// - `camera`: [`Camera`].
 /// - `image_width`: Width of the resulting image.
 /// - `image_height`: Height of the resulting image.
 /// - `samples_per_pixel`: How many samples to take for each pixel for the purpose of anti-aliasing.
 /// - `max_depth`: How often a [`Ray`] should bounce at most.
 #[derive(Debug)]
-pub struct Raytracer<'a> {
-    pub world: HittableList<'a>,
+pub struct Raytracer {
+    pub world: HittableList,
     camera: Camera,
     image_width: u16,
     image_height: u16,
@@ -34,7 +35,7 @@ pub struct Raytracer<'a> {
     progressbar: Option<ProgressBar>,
 }
 
-impl<'a> Raytracer<'a> {
+impl Raytracer {
     pub fn new(
         camera: Camera,
         image_width: u16,
@@ -43,12 +44,12 @@ impl<'a> Raytracer<'a> {
         max_depth: u16,
     ) -> Self {
         Self {
+            world: HittableList::new(),
             camera,
             image_width,
             image_height,
             samples_per_pixel,
             max_depth,
-            world: HittableList::new(),
             progressbar: None,
         }
     }
@@ -181,6 +182,9 @@ impl<'a> Raytracer<'a> {
     }
 }
 
+/// A result of a raytraced render.
+///
+/// This is a wrapper around the result of [`render`](Raytracer::render) in order to allow for interoperability with different image formats.
 pub struct RaytracedImage {
     image: Vec<Color>,
     image_width: u16,
@@ -192,22 +196,20 @@ impl RaytracedImage {
     ///
     /// Defaults to [`image`] as the backend.
     pub fn save<P: AsRef<Path>>(self, path: P) -> Result<(), ImageError> {
-        let image = self.into_image();
+        let image = self.into_image().expect("creating image");
         image.save(path)
     }
 
     /// Convert the image to a [`RgbImage`].
-    pub fn into_image(self) -> RgbImage {
-        let mut image = RgbImage::new(self.image_width.into(), self.image_height.into());
-        self.image
-            .into_iter()
-            .enumerate()
-            .for_each(|(index, color)| {
-                let i = index % self.image_width as usize;
-                let j = index / self.image_width as usize;
-                image.put_pixel(i as u32, j as u32, color.into());
-            });
-        image
+    ///
+    /// Returns [`None`] if the [`Vec`] of [`Color`]s is not long enough.
+    pub fn into_image(self) -> Option<RgbImage> {
+        let image: Vec<u8> = self
+            .image
+            .iter()
+            .flat_map(|color| color.to_rgb_array())
+            .collect();
+        RgbImage::from_vec(self.image_width.into(), self.image_height.into(), image)
     }
 
     /// Convert the image to a [`PPM`].

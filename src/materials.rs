@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use rand::Rng;
 
 use crate::ray::Ray;
-use crate::textures::Texture;
+use crate::textures::{SolidColor, Texture};
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.
@@ -21,17 +21,24 @@ pub trait Material: Debug + Send + Sync {
 /// # Fields
 /// - `albedo`: Color of the [`Lambertian`].
 #[derive(Clone, Debug)]
-pub struct Lambertian<'a, T: Texture> {
-    albedo: &'a T,
+pub struct Lambertian<T: Texture> {
+    albedo: T,
 }
 
-impl<'a, T: Texture> Lambertian<'a, T> {
-    pub fn new(albedo: &'a T) -> Self {
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo: albedo }
+    }
+}
+
+impl Lambertian<SolidColor> {
+    pub fn solid_color(albedo: Color) -> Self {
+        let albedo = SolidColor::new(albedo);
         Self { albedo }
     }
 }
 
-impl<'a, T: Texture> Material for Lambertian<'a, T> {
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut scatter_direction = hit.normal() + Point::random_unit_vector();
 
@@ -49,19 +56,29 @@ impl<'a, T: Texture> Material for Lambertian<'a, T> {
 
 /// A fuzzy reflective material (metal).
 #[derive(Clone, Debug)]
-pub struct Metal<'a, T: Texture> {
-    albedo: &'a T,
+pub struct Metal<T: Texture> {
+    albedo: T,
     fuzz: f32,
 }
 
-impl<'a, T: Texture> Metal<'a, T> {
-    pub fn new(albedo: &'a T, fuzz: f32) -> Self {
+impl<T: Texture> Metal<T> {
+    pub fn new(albedo: T, fuzz: f32) -> Self {
         let fuzz = if fuzz < 1. { fuzz } else { 1. };
+        Self {
+            albedo: albedo,
+            fuzz,
+        }
+    }
+}
+
+impl Metal<SolidColor> {
+    pub fn solid_color(albedo: Color, fuzz: f32) -> Self {
+        let albedo = SolidColor::new(albedo);
         Self { albedo, fuzz }
     }
 }
 
-impl<'a, T: Texture> Material for Metal<'a, T> {
+impl<T: Texture> Material for Metal<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let reflected = ray.direction().unit_vector().reflect(&hit.normal());
         let scattered = Ray::new(

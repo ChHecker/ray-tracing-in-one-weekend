@@ -162,7 +162,7 @@ pub trait Hittable: Debug + Send + Sync {
     }
 }
 
-type HittableBox<'a> = Box<dyn Hittable + 'a>;
+type HittableBox = Box<dyn Hittable>;
 
 /// Stores a list of [`Hittable`]s.
 ///
@@ -171,11 +171,11 @@ type HittableBox<'a> = Box<dyn Hittable + 'a>;
 /// # Fields
 /// - `hittables`: [Vector](Vec) of [`Arc`]s of [`Hittable`]s.
 #[derive(Default, Debug)]
-pub struct HittableList<'a> {
-    hittables: Vec<HittableBox<'a>>,
+pub struct HittableList {
+    hittables: Vec<HittableBox>,
 }
 
-impl<'a> HittableList<'a> {
+impl HittableList {
     /// Create an empty [`HittableList`].
     pub fn new() -> Self {
         Self {
@@ -184,8 +184,8 @@ impl<'a> HittableList<'a> {
     }
 
     /// Push a new [`Hittable`] to the end.
-    pub fn push(&mut self, hittable: HittableBox<'a>) {
-        self.hittables.push(hittable);
+    pub fn push<H: Hittable + 'static>(&mut self, hittable: H) {
+        self.hittables.push(Box::new(hittable));
     }
 
     /// Clear the [`HittableList`].
@@ -204,7 +204,7 @@ impl<'a> HittableList<'a> {
     }
 
     /// Remove the last [`Hittable`] and return it.
-    fn pop(&mut self) -> Option<HittableBox<'a>> {
+    fn pop(&mut self) -> Option<HittableBox> {
         self.hittables.pop()
     }
 
@@ -234,15 +234,15 @@ impl<'a> HittableList<'a> {
     }
 }
 
-impl<'a> Index<usize> for HittableList<'a> {
-    type Output = HittableBox<'a>;
+impl Index<usize> for HittableList {
+    type Output = HittableBox;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.hittables[index]
     }
 }
 
-impl<'a> Hittable for HittableList<'a> {
+impl Hittable for HittableList {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
@@ -380,9 +380,9 @@ impl fmt::Display for BoundingBoxError {
 ///
 /// [`Bvh`]s are binary trees and might therefore sometimes end with only one node. With this enum, [`Option`] is not needed.
 #[derive(Debug)]
-enum BvhNode<'a> {
-    One(HittableBox<'a>),
-    Two(HittableBox<'a>, HittableBox<'a>),
+enum BvhNode {
+    One(HittableBox),
+    Two(HittableBox, HittableBox),
 }
 
 /// Bounding Volume Hierarchy.
@@ -395,12 +395,12 @@ enum BvhNode<'a> {
 /// - `left`: Left subtree/node.
 /// - `right`: Right subtree/node.
 #[derive(Debug)]
-pub struct Bvh<'a> {
+pub struct Bvh {
     aabb: Aabb,
-    subnode: BvhNode<'a>,
+    subnode: BvhNode,
 }
 
-impl<'a> Bvh<'a> {
+impl Bvh {
     /// Create a new [`Bvh`] from a [`HittableList`] that will be consumed as well as a time range.
     ///
     /// This works recursively. If there is only one or two elements left in the list, they are added to the two subnodes. In all other cases, the list [is sorted by a random axis](HittableList::sort_by_box), split in half, and propagated down.
@@ -410,7 +410,7 @@ impl<'a> Bvh<'a> {
     /// - `time0`: Starting time.
     /// - `time1`: Ending time.
     pub fn new(
-        mut hittables: HittableList<'a>,
+        mut hittables: HittableList,
         time0: f32,
         time1: f32,
     ) -> Result<Self, BoundingBoxError> {
@@ -473,7 +473,7 @@ impl<'a> Bvh<'a> {
     }
 }
 
-impl<'a> Hittable for Bvh<'a> {
+impl Hittable for Bvh {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         if !self.aabb.hit(ray, t_min, t_max) {
             return None;
@@ -502,9 +502,9 @@ impl<'a> Hittable for Bvh<'a> {
 /// Options to store [`Hittable`]s.
 ///
 /// Both [`HittableList`] and [`Bvh`] can store [`Hittable`]s. Latter is faster, but not always possible (see [`BoundingBoxError`], e.g. an infinite plane).
-pub enum HittableListOptions<'a> {
-    HittableList(HittableList<'a>),
-    Bvh(Bvh<'a>),
+pub enum HittableListOptions {
+    HittableList(HittableList),
+    Bvh(Bvh),
 }
 
 #[cfg(test)]
@@ -517,9 +517,13 @@ mod test {
     #[test]
     fn bvh_hit() {
         let black = SolidColor::new(color![1., 1., 1.]);
-        let black_lambertian = Lambertian::new(&black);
-        let left = Box::new(Sphere::new(point![-2., 0., -1.], 1., &black_lambertian));
-        let right = Box::new(Sphere::new(point![2., 0., -1.], 1., &black_lambertian));
+        let black_lambertian = Lambertian::new(black);
+        let left = Box::new(Sphere::new(
+            point![-2., 0., -1.],
+            1.,
+            black_lambertian.clone(),
+        ));
+        let right = Box::new(Sphere::new(point![2., 0., -1.], 1., black_lambertian));
         let aabb = Aabb::surrounding(
             &left.bounding_box(0., 0.).unwrap(),
             &right.bounding_box(0., 0.).unwrap(),

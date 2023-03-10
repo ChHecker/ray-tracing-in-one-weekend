@@ -2,8 +2,42 @@ use std::path::Path;
 
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
-use ray_tracing_in_one_weekend::textures::*;
 use ray_tracing_in_one_weekend::*;
+
+fn amogus(world: &mut HittableList) {
+    let red_lambertian = Lambertian::solid_color(color![1., 0., 0.]);
+
+    let green_lambertian = Lambertian::solid_color(color![0., 1., 0.]);
+
+    let ground = Sphere::new(point![0., -1000., -1.], 1000., green_lambertian);
+    world.push(ground);
+
+    let left_leg = Cylinder::new(point![-1., 0.5, -1.], 0.5, 1., red_lambertian.clone());
+    world.push(left_leg);
+
+    let right_leg = Cylinder::new(point![1., 0.5, -1.], 0.5, 1., red_lambertian.clone());
+    world.push(right_leg);
+
+    let body = Cylinder::new(point![0., 2.5, -1.], 1.5, 3., red_lambertian.clone());
+    world.push(body);
+
+    let head = Sphere::new(point![0., 4., -1.], 1.5, red_lambertian);
+    world.push(head);
+
+    let blue_metal = Metal::solid_color(color![0.3, 0.3, 1.], 5.);
+    let visor = Sphere::new(point![0., 4., 0.], 0.8, blue_metal);
+    world.push(visor);
+
+    let dark_red_lambertian = Lambertian::solid_color(color![0.8, 0., 0.]);
+    let backpack = Cylinder::new(point![0., 3., -2.75], 0.5, 1.8, dark_red_lambertian);
+    world.push(backpack);
+
+    // let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Dielectric::new(1.5));
+    // world.push(glass_sphere);
+
+    // let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Dielectric::new(1.5));
+    // world.push(inner_glass_sphere);
+}
 
 fn main() {
     // Image
@@ -34,43 +68,7 @@ fn main() {
         samples_per_pixel,
         max_depth,
     );
-
-    let red_texture = SolidColor::new(color![1., 0., 0.]);
-    let red_lambertian = Lambertian::new(&red_texture);
-
-    let green_texture = SolidColor::new(color![0., 1., 0.]);
-    let green_lambertian = Lambertian::new(&green_texture);
-
-    let ground = Sphere::new(point![0., -1000., -1.], 1000., &green_lambertian);
-    raytracer.world.push(Box::new(ground));
-
-    let left_leg = Cylinder::new(point![-1., 0.5, -1.], 0.5, 1., &red_lambertian);
-    raytracer.world.push(Box::new(left_leg));
-
-    let right_leg = Cylinder::new(point![1., 0.5, -1.], 0.5, 1., &red_lambertian);
-    raytracer.world.push(Box::new(right_leg));
-
-    let body = Cylinder::new(point![0., 2.5, -1.], 1.5, 3., &red_lambertian);
-    raytracer.world.push(Box::new(body));
-
-    let head = Sphere::new(point![0., 4., -1.], 1.5, &red_lambertian);
-    raytracer.world.push(Box::new(head));
-
-    let blue_texture = SolidColor::new(color![0.3, 0.3, 1.]);
-    let blue_metal = Metal::new(&blue_texture, 5.);
-    let visor = Sphere::new(point![0., 4., 0.], 0.8, &blue_metal);
-    raytracer.world.push(Box::new(visor));
-
-    let dark_red_texture = SolidColor::new(color![0.8, 0., 0.]);
-    let dark_red_lambertian = Lambertian::new(&dark_red_texture);
-    let backpack = Cylinder::new(point![0., 3., -2.75], 0.5, 1.8, &dark_red_lambertian);
-    raytracer.world.push(Box::new(backpack));
-
-    // let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Arc::new(Dielectric::new(1.5)));
-    // world.push(Arc::new(glass_sphere));
-
-    // let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Arc::new(Dielectric::new(1.5)));
-    // world.push(Arc::new(inner_glass_sphere));
+    amogus(&mut raytracer.world);
 
     raytracer
         .render()
