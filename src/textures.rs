@@ -50,6 +50,17 @@ impl<S: Texture, T: Texture> CheckerTexture<S, T> {
     }
 }
 
+impl CheckerTexture<SolidColor, SolidColor> {
+    pub fn solid_colors(color_even: Color, color_odd: Color) -> Self {
+        let texture_even = SolidColor::new(color_even);
+        let texture_odd = SolidColor::new(color_odd);
+        Self {
+            texture_even,
+            texture_odd,
+        }
+    }
+}
+
 impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
     fn color_at(&self, u: f32, v: f32, hit_point: Point) -> Color {
         let sin_product =
