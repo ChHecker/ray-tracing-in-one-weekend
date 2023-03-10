@@ -7,6 +7,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::Rng;
 use rayon::prelude::*;
 
+use crate::color::BLACK;
 use crate::hittable::{BoundingBoxError, Bvh, HittableListOptions};
 use crate::ppm::PPM;
 use crate::ray::Ray;
@@ -182,52 +183,36 @@ impl Raytracer {
         colors
     }
 
-    /// Colors the [`Ray`] according to hits when the world can be optimized as a [`Bvh`].
-    fn ray_color_bvh(world: &Bvh, ray: Ray, depth: u16) -> Color {
-        if depth == 0 {
-            return color![0., 0., 0.];
-        }
-
-        if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
-            if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-                return attenuation * Raytracer::ray_color_bvh(world, scattered, depth - 1);
-            }
-            return color![0., 0., 0.];
-        }
-
-        let unit_direction = ray.direction().unit_vector();
-        let t = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - t) * color![1., 1., 1.] + t * color![0.5, 0.7, 1.0]
-    }
-
-    /// Colors the [`Ray`] according to hits when the world cannot be optimized as a [`Bvh`].
-    fn ray_color_hittable(world: &HittableList, ray: Ray, depth: u16) -> Color {
-        if depth == 0 {
-            return color![0., 0., 0.];
-        }
-
-        if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
-            if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-                return attenuation * Raytracer::ray_color_hittable(world, scattered, depth - 1);
-            }
-            return color![0., 0., 0.];
-        }
-
-        let unit_direction = ray.direction().unit_vector();
-        let t = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - t) * color![1., 1., 1.] + t * color![0.5, 0.7, 1.0]
-    }
-
     /// Colors the [`Ray`] according to hits.
-    ///
-    /// Chooses whether to use [`Raytracer::ray_color_bvh`] or [`Raytracer::ray_color_hittable`] from the [`HittableListOptions`] enum.
-    fn ray_color(world: &HittableListOptions, ray: Ray, depth: u16) -> Color {
-        match world {
-            HittableListOptions::HittableList(world) => {
-                Raytracer::ray_color_hittable(world, ray, depth)
-            }
-            HittableListOptions::Bvh(world) => Raytracer::ray_color_bvh(world, ray, depth),
+    fn ray_color(world_option: &HittableListOptions, ray: Ray, depth: u16) -> Color {
+        if depth == 0 {
+            return BLACK;
         }
+
+        match world_option {
+            HittableListOptions::HittableList(world) => {
+                if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
+                    if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
+                        return attenuation
+                            * Raytracer::ray_color(world_option, scattered, depth - 1);
+                    }
+                    return color![0., 0., 0.];
+                }
+            }
+            HittableListOptions::Bvh(world) => {
+                if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
+                    if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
+                        return attenuation
+                            * Raytracer::ray_color(world_option, scattered, depth - 1);
+                    }
+                    return color![0., 0., 0.];
+                }
+            }
+        }
+
+        let unit_direction = ray.direction().unit_vector();
+        let t = 0.5 * (unit_direction.y() + 1.0);
+        (1.0 - t) * color![1., 1., 1.] + t * color![0.5, 0.7, 1.0]
     }
 }
 
