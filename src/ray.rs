@@ -43,7 +43,7 @@ impl Ray {
     ///
     /// # Examples
     /// ```
-    /// # use ray_tracing_in_one_weekend::{*, vec3::*};
+    /// # use ray_tracing_in_one_weekend::{*, ray::Ray};
     /// let origin = point![1., 0., 0.];
     /// let direction = point![0., 1., 0.];
     /// let ray = Ray::new(origin, direction);
