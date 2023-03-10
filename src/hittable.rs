@@ -302,7 +302,7 @@ enum BvhNode {
 /// - `left`: Left subtree/node.
 /// - `right`: Right subtree/node.
 #[derive(Clone, Debug)]
-pub struct Bvh {
+pub(crate) struct Bvh {
     aabb: Aabb,
     subnode: BvhNode,
 }
@@ -409,7 +409,7 @@ impl Hittable for Bvh {
 /// Options to store [`Hittable`]s.
 ///
 /// Both [`HittableList`] and [`Bvh`] can store [`Hittable`]s. Latter is faster, but not always possible (see [`BoundingBoxError`], e.g. an infinite plane).
-pub enum HittableListOptions {
+pub(crate) enum HittableListOptions {
     HittableList(HittableList),
     Bvh(Bvh),
 }
