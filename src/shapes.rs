@@ -107,7 +107,10 @@ impl<M: Material> Sphere<M, Moving> {
     }
 }
 
-impl<M: Material> Hittable for Sphere<M, Stationary> {
+impl<M> Hittable for Sphere<M, Stationary>
+where
+    M: Material + Clone + 'static,
+{
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position();
         let a = ray.direction().norm_sq();
@@ -150,7 +153,10 @@ impl<M: Material> Hittable for Sphere<M, Stationary> {
     }
 }
 
-impl<M: Material> Hittable for Sphere<M, Moving> {
+impl<M> Hittable for Sphere<M, Moving>
+where
+    M: Material + Clone + 'static,
+{
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position(ray.time());
         let a = ray.direction().norm_sq();
@@ -245,7 +251,10 @@ impl<M: Material> Cylinder<M, Stationary> {
     }
 }
 
-impl<M: Material> Hittable for Cylinder<M, Stationary> {
+impl<M> Hittable for Cylinder<M, Stationary>
+where
+    M: Material + Clone + 'static,
+{
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = point!(
             ray.origin().x() - self.position().x(),
