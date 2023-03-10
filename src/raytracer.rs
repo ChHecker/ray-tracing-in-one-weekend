@@ -91,11 +91,61 @@ impl Raytracer {
         }
     }
 
+    pub fn render_without_bvh(self) -> RaytracedImage {
+        let image_width = self.image_width;
+        let image_height = self.image_height;
+        let image = self.render_multithreaded_without_bvh();
+
+        RaytracedImage {
+            image,
+            image_width,
+            image_height,
+        }
+    }
+
     fn render_multithreaded(self) -> Vec<Color> {
         let world = match Bvh::check_hittable_list(&self.world) {
             Ok(()) => HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH")),
             Err(BoundingBoxError) => HittableListOptions::HittableList(self.world),
         };
+
+        let mut colors =
+            vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];
+
+        colors
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, color)| {
+                let mut rng = rand::thread_rng();
+                let i = index % self.image_width as usize;
+                let j = self.image_height as usize - index / self.image_width as usize - 1;
+
+                let mut pixel_color = color![0., 0., 0.];
+
+                for _ in 0..self.samples_per_pixel {
+                    let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
+                    let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
+                    pixel_color +=
+                        Raytracer::ray_color(&world, self.camera.get_ray(u, v), self.max_depth);
+                }
+                pixel_color = color!(
+                    (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.g() / self.samples_per_pixel as f32).sqrt(),
+                    (pixel_color.b() / self.samples_per_pixel as f32).sqrt(),
+                );
+
+                if let Some(bar) = &self.progressbar {
+                    bar.inc(1);
+                }
+
+                *color = pixel_color;
+            });
+
+        colors
+    }
+
+    fn render_multithreaded_without_bvh(self) -> Vec<Color> {
+        let world = HittableListOptions::HittableList(self.world);
 
         let mut colors =
             vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];

@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use crate::color::BLACK;
+use crate::color::WHITE;
 use crate::perlin::Perlin;
 use crate::*;
 
@@ -75,20 +75,28 @@ impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
     }
 }
 
+/// A grayscale Perlin noise texture.
+///
+/// # Fields
+/// - `noise`: Stores the [`Perlin`] object. This is generated automatically.
+/// - `scale`: By how much the `hit_point` should be scaled.
 #[derive(Clone, Debug)]
 pub struct PerlinNoiseTexture {
     noise: Perlin,
+    scale: f32,
 }
 
 impl PerlinNoiseTexture {
-    pub fn new() -> Self {
+    pub fn new(scale: f32) -> Self {
         let noise = Perlin::new();
-        Self { noise }
+        Self { noise, scale }
     }
 }
 
 impl Texture for PerlinNoiseTexture {
     fn color_at(&self, _u: f32, _v: f32, hit_point: Point) -> Color {
-        BLACK * self.noise.noise(hit_point)
+        WHITE
+            * 0.5
+            * (1. + (self.scale * hit_point.z() + 10. * self.noise.turbulance(hit_point, 7)).sin())
     }
 }

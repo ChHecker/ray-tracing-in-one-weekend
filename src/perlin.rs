@@ -1,13 +1,14 @@
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
-use crate::Point;
+use crate::*;
 
 const POINT_COUNT: usize = 256;
 
+/// Wrapper for Perlin generation.
 #[derive(Clone, Debug)]
 pub struct Perlin {
-    random_floats: [f32; POINT_COUNT],
+    random_points: [Point; POINT_COUNT],
     permutation_x: [usize; POINT_COUNT],
     permutation_y: [usize; POINT_COUNT],
     permutation_z: [usize; POINT_COUNT],
@@ -17,9 +18,9 @@ impl Perlin {
     pub fn new() -> Self {
         let mut rng = rand::thread_rng();
 
-        let mut random_floats = [0.; POINT_COUNT];
-        for i in &mut random_floats {
-            *i = rng.gen();
+        let mut random_points = [point![0., 0., 0.]; POINT_COUNT];
+        for i in &mut random_points {
+            *i = Point::random_in_range(-1., 1.).unit_vector();
         }
 
         let permutation_x = Perlin::generate_permutation(&mut rng);
@@ -27,36 +28,90 @@ impl Perlin {
         let permutation_z = Perlin::generate_permutation(&mut rng);
 
         Self {
-            random_floats,
+            random_points,
             permutation_x,
             permutation_y,
             permutation_z,
         }
     }
 
+    /// Generate Perlin noise.
     pub fn noise(&self, point: Point) -> f32 {
-        let i = (4. * point.x()) as usize & 255;
-        let j = (4. * point.y()) as usize & 255;
-        let k = (4. * point.z()) as usize & 255;
+        let u = point.x() - point.x().floor();
+        let v = point.y() - point.y().floor();
+        let w = point.z() - point.z().floor();
 
-        self.random_floats[self.permutation_x[i] ^ self.permutation_y[j] ^ self.permutation_z[k]]
+        let u = u * u * (3. - 2. * u);
+        let v = v * v * (3. - 2. * v);
+        let w = w * w * (3. - 2. * w);
+
+        let i = point.x().floor() as usize;
+        let j = point.y().floor() as usize;
+        let k = point.z().floor() as usize;
+
+        let mut c = [[[point![0., 0., 0.]; 2]; 2]; 2];
+
+        for di in 0..2 {
+            for dj in 0..2 {
+                for dk in 0..2 {
+                    c[di][dj][dk] = self.random_points[self.permutation_x[(i + di) & 255]
+                        ^ self.permutation_y[(j + dj) & 255]
+                        ^ self.permutation_z[(k + dk) & 255]];
+                }
+            }
+        }
+
+        Perlin::trilinear_interpolation(&c, u, v, w)
+    }
+
+    pub fn turbulance(&self, mut point: Point, depth: u8) -> f32 {
+        let mut accum = 0.;
+        let mut weight = 1.;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(point);
+            weight *= 0.5;
+            point *= 2.;
+        }
+
+        accum.abs()
     }
 
     fn generate_permutation(rng: &mut ThreadRng) -> [usize; POINT_COUNT] {
-        let mut permutation = [0; POINT_COUNT];
-        for (i, p) in permutation.iter_mut().enumerate() {
-            *p = i;
-        }
+        let mut permutation: [usize; POINT_COUNT] =
+            (0..POINT_COUNT).collect::<Vec<_>>().try_into().unwrap();
 
         Perlin::permute(&mut permutation, rng);
 
         permutation
     }
 
-    fn permute(permutation: &mut [usize; POINT_COUNT], rng: &mut ThreadRng) {
-        for i in (0..POINT_COUNT - 1).rev() {
-            let rand = rng.gen_range(0..i);
-            (permutation[i], permutation[rand]) = (permutation[rand], permutation[i])
+    fn permute(permutation: &mut [usize], rng: &mut ThreadRng) {
+        for i in (1..POINT_COUNT).rev() {
+            let rand = rng.gen_range(0..=i);
+            permutation.swap(i, rand);
         }
+    }
+
+    fn trilinear_interpolation(c: &[[[Point; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
+        let u = u * u * (3. - 2. * u);
+        let v = v * v * (3. - 2. * v);
+        let w = w * w * (3. - 2. * w);
+
+        let mut accum: f32 = 0.;
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let weight_vector = point![u - i as f32, v - j as f32, w - k as f32];
+                    accum += (i as f32 * u + (1 - i) as f32 * (1. - u))
+                        * (j as f32 * v + (1 - j) as f32 * (1. - v))
+                        * (k as f32 * w + (1 - k) as f32 * (1. - w))
+                        * c[i][j][k].dot(&weight_vector);
+                }
+            }
+        }
+
+        accum
     }
 }
