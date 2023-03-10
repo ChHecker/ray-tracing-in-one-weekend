@@ -6,6 +6,7 @@
 //! In order to create a ray-traced image, one needs to create a [`Camera`], then a [`Raytracer`] and add [`Hittable`]s to its `world`.
 
 pub mod camera;
+pub mod hitrecord;
 pub mod hittable;
 pub mod materials;
 pub mod ppm;
@@ -17,6 +18,7 @@ pub mod textures;
 pub mod vec3;
 
 pub use camera::Camera;
-pub use hittable::{HitRecord, Hittable, HittableList};
+pub use hitrecord::HitRecord;
+pub use hittable::{Hittable, HittableList};
 pub use raytracer::Raytracer;
 pub use vec3::{Color, Point, Vec3};
