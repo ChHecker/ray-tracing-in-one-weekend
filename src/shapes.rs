@@ -43,19 +43,19 @@ impl Position for Moving {}
 /// - `radius`: Radius of the sphere.
 /// - `material`: Material of the sphere.
 #[derive(Clone, Debug)]
-pub struct Sphere<'a, M: Material, P: Position> {
+pub struct Sphere<M: Material, P: Position> {
     center: P,
     radius: f32,
-    material: &'a M,
+    material: M,
 }
 
-impl<'a, M: Material, P: Position> Sphere<'a, M, P> {
+impl<M: Material, P: Position> Sphere<M, P> {
     pub fn radius(&self) -> f32 {
         self.radius
     }
 
-    pub fn material(&self) -> &'a M {
-        self.material
+    pub fn material(&self) -> &M {
+        &self.material
     }
 
     /// Get the surface coordinates (u, v) on the sphere from a [`Point`].
@@ -69,9 +69,9 @@ impl<'a, M: Material, P: Position> Sphere<'a, M, P> {
     }
 }
 
-impl<'a, M: Material> Sphere<'a, M, Stationary> {
+impl<M: Material> Sphere<M, Stationary> {
     /// Create a new [stationary](Stationary) [`Sphere`].
-    pub fn new(center: Point, radius: f32, material: &'a M) -> Self {
+    pub fn new(center: Point, radius: f32, material: M) -> Self {
         Self {
             center: Stationary { position: center },
             radius,
@@ -85,7 +85,7 @@ impl<'a, M: Material> Sphere<'a, M, Stationary> {
         position_end: Point,
         time_start: f32,
         time_end: f32,
-    ) -> Sphere<'a, M, Moving> {
+    ) -> Sphere<M, Moving> {
         Sphere {
             center: Moving {
                 position: (self.center.position, position_end),
@@ -101,13 +101,13 @@ impl<'a, M: Material> Sphere<'a, M, Stationary> {
     }
 }
 
-impl<'a, M: Material> Sphere<'a, M, Moving> {
+impl<M: Material> Sphere<M, Moving> {
     pub fn position(&self, time: f32) -> Point {
         self.center.position(time)
     }
 }
 
-impl<'a, M: Material> Hittable for Sphere<'a, M, Stationary> {
+impl<M: Material> Hittable for Sphere<M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position();
         let a = ray.direction().norm_sq();
@@ -137,7 +137,7 @@ impl<'a, M: Material> Hittable for Sphere<'a, M, Stationary> {
             v,
             normal,
             root,
-            self.material,
+            &self.material,
             ray,
         ))
     }
@@ -150,7 +150,7 @@ impl<'a, M: Material> Hittable for Sphere<'a, M, Stationary> {
     }
 }
 
-impl<'a, M: Material> Hittable for Sphere<'a, M, Moving> {
+impl<M: Material> Hittable for Sphere<M, Moving> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin() - self.position(ray.time());
         let a = ray.direction().norm_sq();
@@ -180,7 +180,7 @@ impl<'a, M: Material> Hittable for Sphere<'a, M, Moving> {
             v,
             normal,
             root,
-            self.material,
+            &self.material,
             ray,
         ))
     }
@@ -208,14 +208,14 @@ impl<'a, M: Material> Hittable for Sphere<'a, M, Moving> {
 /// - `height`: Height of the cylinder (from top to bottom, not from center to bottom).
 /// - `material`: Material of the cylinder.
 #[derive(Clone, Debug)]
-pub struct Cylinder<'a, M: Material, P: Position> {
+pub struct Cylinder<M: Material, P: Position> {
     center: P,
     radius: f32,
     height: f32,
-    material: &'a M,
+    material: M,
 }
 
-impl<'a, M: Material, P: Position> Cylinder<'a, M, P> {
+impl<M: Material, P: Position> Cylinder<M, P> {
     pub fn radius(&self) -> f32 {
         self.radius
     }
@@ -224,14 +224,14 @@ impl<'a, M: Material, P: Position> Cylinder<'a, M, P> {
         self.height
     }
 
-    pub fn material(&self) -> &'a M {
-        self.material
+    pub fn material(&self) -> &M {
+        &self.material
     }
 }
 
-impl<'a, M: Material> Cylinder<'a, M, Stationary> {
+impl<M: Material> Cylinder<M, Stationary> {
     /// Create a new [stationary](Stationary) [`Cylinder`].
-    pub fn new(center: Point, radius: f32, height: f32, material: &'a M) -> Self {
+    pub fn new(center: Point, radius: f32, height: f32, material: M) -> Self {
         Self {
             center: Stationary { position: center },
             radius,
@@ -245,7 +245,7 @@ impl<'a, M: Material> Cylinder<'a, M, Stationary> {
     }
 }
 
-impl<'a, M: Material> Hittable for Cylinder<'a, M, Stationary> {
+impl<M: Material> Hittable for Cylinder<M, Stationary> {
     fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = point!(
             ray.origin().x() - self.position().x(),
@@ -325,7 +325,7 @@ impl<'a, M: Material> Hittable for Cylinder<'a, M, Stationary> {
             0.,
             normal,
             root,
-            self.material,
+            &self.material,
             ray,
         ))
     }

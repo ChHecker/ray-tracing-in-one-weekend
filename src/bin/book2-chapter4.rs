@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::sync::Arc;
 
 use rand::Rng;
 use ray_tracing_in_one_weekend::materials::*;
@@ -10,13 +9,10 @@ use ray_tracing_in_one_weekend::*;
 fn random_world(world: &mut HittableList) {
     let mut rng = rand::thread_rng();
 
-    let texture_even = Arc::new(SolidColor::new(color![1., 1., 1.]));
-    let texture_odd = Arc::new(SolidColor::new(color![0., 0., 0.]));
-    let ground_material = Arc::new(Lambertian::new(Arc::new(CheckerTexture::new(
-        texture_even,
-        texture_odd,
-    ))));
-    let ground_sphere = Arc::new(Sphere::new(point![0., -1000., 0.], 1000., ground_material));
+    let texture_even = SolidColor::new(color![1., 1., 1.]);
+    let texture_odd = SolidColor::new(color![0., 0., 0.]);
+    let ground_material = Lambertian::new(CheckerTexture::new(texture_even, texture_odd));
+    let ground_sphere = Sphere::new(point![0., -1000., 0.], 1000., ground_material);
     world.push(ground_sphere);
 
     for a in -11..11 {
@@ -31,37 +27,32 @@ fn random_world(world: &mut HittableList) {
             if (center - point![4., 0.2, 0.]).norm() > 0.9 {
                 if choose_material < 0.8 {
                     let sphere_material =
-                        Arc::new(Lambertian::solid_color(Color::random() * Color::random()));
-                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                        Lambertian::solid_color(Color::random() * Color::random());
+                    world.push(Sphere::new(center, 0.2, sphere_material));
                 } else if choose_material < 0.9 {
                     let albedo = Color::random_in_range(0.5, 1.);
                     let fuzz = 0.5 * rng.gen::<f32>();
-                    let sphere_material = Arc::new(Metal::solid_color(albedo, fuzz));
-                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let sphere_material = Metal::solid_color(albedo, fuzz);
+                    world.push(Sphere::new(center, 0.2, sphere_material));
                 } else {
-                    let sphere_material = Arc::new(Dielectric::new(1.5));
-                    world.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let sphere_material = Dielectric::new(1.5);
+                    world.push(Sphere::new(center, 0.2, sphere_material));
                 }
             }
         }
     }
 
-    let material1 = Arc::new(Dielectric::new(1.5));
-    let sphere1 = Arc::new(Sphere::new(point![0., 1., 0.], 1., material1));
+    let material1 = Dielectric::new(1.5);
+    let sphere1 = Sphere::new(point![0., 1., 0.], 1., material1);
     world.push(sphere1);
 
-    let material2 = Arc::new(Lambertian::new(Arc::new(SolidColor::new(color![
-        0.4, 0.2, 0.1
-    ]))));
-    let sphere2 = Arc::new(Sphere::new(point![-4., 1., 0.], 1., material2));
+    let material2 = Lambertian::new(SolidColor::new(color![0.4, 0.2, 0.1]));
+    let sphere2 = Sphere::new(point![-4., 1., 0.], 1., material2);
     world.push(sphere2);
 
-    let material3 = Arc::new(Metal::solid_color(color![0.7, 0.6, 0.5], 0.));
-    let sphere3 = Arc::new(Sphere::new(point![3., 1., 0.], 1., material3).with_time(
-        point![5., 1., 0.],
-        0.,
-        1.,
-    ));
+    let material3 = Metal::solid_color(color![0.7, 0.6, 0.5], 0.);
+    let sphere3 =
+        Sphere::new(point![3., 1., 0.], 1., material3).with_time(point![5., 1., 0.], 0., 1.);
     world.push(sphere3);
 }
 

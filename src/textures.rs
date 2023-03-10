@@ -7,7 +7,7 @@ use crate::*;
 /// An abstraction over all textures.
 ///
 /// `Send + Sync` is necessary for multithreading.
-pub trait Texture: Clone + Debug + Send + Sync {
+pub trait Texture: Debug + Send + Sync {
     /// Calculate the color of the texture.
     ///
     /// # Parameters:
@@ -36,13 +36,13 @@ impl Texture for SolidColor {
 
 /// A checkerboard texture.
 #[derive(Clone, Debug)]
-pub struct CheckerTexture<'a, S: Texture, T: Texture> {
-    texture_even: &'a S,
-    texture_odd: &'a T,
+pub struct CheckerTexture<S: Texture, T: Texture> {
+    texture_even: S,
+    texture_odd: T,
 }
 
-impl<'a, S: Texture, T: Texture> CheckerTexture<'a, S, T> {
-    pub fn new(texture_even: &'a S, texture_odd: &'a T) -> Self {
+impl<S: Texture, T: Texture> CheckerTexture<S, T> {
+    pub fn new(texture_even: S, texture_odd: T) -> Self {
         Self {
             texture_even,
             texture_odd,
@@ -50,7 +50,7 @@ impl<'a, S: Texture, T: Texture> CheckerTexture<'a, S, T> {
     }
 }
 
-impl<'a, S: Texture, T: Texture> Texture for CheckerTexture<'a, S, T> {
+impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
     fn color_at(&self, u: f32, v: f32, hit_point: Point) -> Color {
         let sin_product =
             (10. * hit_point.x()).sin() * (10. * hit_point.y()).sin() * (10. * hit_point.z()).sin();
