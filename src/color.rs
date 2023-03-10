@@ -67,6 +67,16 @@ impl From<Color> for Rgb<u8> {
     }
 }
 
+impl From<Rgb<u8>> for Color {
+    fn from(value: Rgb<u8>) -> Self {
+        color![
+            value[0] as f32 / 255.,
+            value[1] as f32 / 255.,
+            value[2] as f32 / 255.,
+        ]
+    }
+}
+
 impl ops::Add for Color {
     type Output = Self;
 

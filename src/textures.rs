@@ -1,6 +1,10 @@
 //! A way to apply textures to shapes.
 
 use std::fmt::Debug;
+use std::path::Path;
+
+use image::io::Reader as ImageReader;
+use image::{ImageError, RgbImage};
 
 use crate::color::WHITE;
 use crate::perlin::Perlin;
@@ -98,5 +102,37 @@ impl Texture for PerlinNoiseTexture {
         WHITE
             * 0.5
             * (1. + (self.scale * hit_point.z() + 10. * self.noise.turbulance(hit_point, 7)).sin())
+    }
+}
+
+/// A image texture.
+#[derive(Clone, Debug)]
+pub struct ImageTexture {
+    image: RgbImage,
+}
+
+impl ImageTexture {
+    pub fn new(image: RgbImage) -> Self {
+        Self { image }
+    }
+
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self, ImageError> {
+        let image: RgbImage = ImageReader::open(path)?.decode()?.into_rgb8();
+        Ok(Self { image })
+    }
+}
+
+impl Texture for ImageTexture {
+    fn color_at(&self, u: f32, v: f32, _hit_point: Point) -> Color {
+        let mut i = (u.clamp(0., 1.) * self.image.width() as f32) as u32;
+        let mut j = ((1. - v.clamp(0., 1.)) * self.image.height() as f32) as u32;
+        if i >= self.image.width() {
+            i = self.image.width() - 1;
+        }
+        if j >= self.image.height() {
+            j = self.image.height() - 1;
+        }
+
+        self.image.get_pixel(i, j).clone().into()
     }
 }
