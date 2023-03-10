@@ -147,8 +147,8 @@ where
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(Aabb::new(
-            self.position() - point![self.radius, self.radius, self.radius],
-            self.position() + point![self.radius, self.radius, self.radius],
+            self.position() - point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
+            self.position() + point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
         ))
     }
 }
@@ -193,12 +193,12 @@ where
 
     fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         let aabb1 = Aabb::new(
-            self.position(time0) - point![self.radius, self.radius, self.radius],
-            self.position(time0) + point![self.radius, self.radius, self.radius],
+            self.position(time0) - point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
+            self.position(time0) + point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
         );
         let aabb2 = Aabb::new(
-            self.position(time1) - point![self.radius, self.radius, self.radius],
-            self.position(time1) + point![self.radius, self.radius, self.radius],
+            self.position(time1) - point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
+            self.position(time1) + point![self.radius.abs(), self.radius.abs(), self.radius.abs()],
         );
         Some(Aabb::surrounding(&aabb1, &aabb2))
     }
@@ -330,7 +330,7 @@ where
 
         Some(HitRecord::from_ray(
             point,
-            0., // TODO
+            0., // TODO: Parametrization of Cylinder
             0.,
             normal,
             root,
@@ -341,8 +341,8 @@ where
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(Aabb::new(
-            self.position() - point![self.radius, self.height / 2., self.radius],
-            self.position() + point![self.radius, self.height / 2., self.radius],
+            self.position() - point![self.radius.abs(), self.height.abs() / 2., self.radius.abs()],
+            self.position() + point![self.radius.abs(), self.height.abs() / 2., self.radius.abs()],
         ))
     }
 }

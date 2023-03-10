@@ -32,11 +32,11 @@ fn amogus(world: &mut HittableList) {
     let backpack = Cylinder::new(point![0., 3., -2.75], 0.5, 1.8, dark_red_lambertian);
     world.push(backpack);
 
-    // let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Dielectric::new(1.5));
-    // world.push(glass_sphere);
+    let glass_sphere = Sphere::new(point![0., 3., -1.], 4., Dielectric::new(1.5));
+    world.push(glass_sphere);
 
-    // let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Dielectric::new(1.5));
-    // world.push(inner_glass_sphere);
+    let inner_glass_sphere = Sphere::new(point![0., 3., -1.], -3.9, Dielectric::new(1.5));
+    world.push(inner_glass_sphere);
 }
 
 fn main() {
@@ -67,7 +67,8 @@ fn main() {
         image_height,
         samples_per_pixel,
         max_depth,
-    );
+    )
+    .with_progressbar();
     amogus(&mut raytracer.world);
 
     raytracer
