@@ -18,7 +18,6 @@ pub mod textures;
 pub mod vec3;
 
 pub use camera::Camera;
-pub use hitrecord::HitRecord;
 pub use hittable::{Hittable, HittableList};
 pub use raytracer::Raytracer;
 pub use vec3::{Color, Point, Vec3};
