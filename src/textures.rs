@@ -2,6 +2,8 @@
 
 use std::fmt::Debug;
 
+use crate::color::BLACK;
+use crate::perlin::Perlin;
 use crate::*;
 
 /// An abstraction over all textures.
@@ -70,5 +72,23 @@ impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
         } else {
             self.texture_even.color_at(u, v, hit_point)
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct PerlinNoiseTexture {
+    noise: Perlin,
+}
+
+impl PerlinNoiseTexture {
+    pub fn new() -> Self {
+        let noise = Perlin::new();
+        Self { noise }
+    }
+}
+
+impl Texture for PerlinNoiseTexture {
+    fn color_at(&self, _u: f32, _v: f32, hit_point: Point) -> Color {
+        BLACK * self.noise.noise(hit_point)
     }
 }

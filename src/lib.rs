@@ -10,6 +10,7 @@ pub mod color;
 pub mod hitrecord;
 pub mod hittable;
 pub mod materials;
+pub mod perlin;
 pub mod point;
 pub mod ppm;
 pub mod ray;
