@@ -28,7 +28,7 @@ pub struct Lambertian<T: Texture> {
 
 impl<T: Texture> Lambertian<T> {
     pub fn new(albedo: T) -> Self {
-        Self { albedo: albedo }
+        Self { albedo }
     }
 }
 
@@ -65,10 +65,7 @@ pub struct Metal<T: Texture> {
 impl<T: Texture> Metal<T> {
     pub fn new(albedo: T, fuzz: f32) -> Self {
         let fuzz = if fuzz < 1. { fuzz } else { 1. };
-        Self {
-            albedo: albedo,
-            fuzz,
-        }
+        Self { albedo, fuzz }
     }
 }
 

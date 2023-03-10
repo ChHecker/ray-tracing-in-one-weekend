@@ -27,7 +27,7 @@ pub struct Camera {
     vertical: Point,
     u: Point,
     v: Point,
-    w: Point,
+    _w: Point,
     lens_radius: f32,
     time: Option<(f32, f32)>,
 }
@@ -71,7 +71,7 @@ impl Camera {
             vertical,
             u,
             v,
-            w,
+            _w: w,
             lens_radius: aperture / 2.,
             time: None,
         }

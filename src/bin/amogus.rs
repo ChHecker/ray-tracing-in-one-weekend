@@ -74,6 +74,6 @@ fn main() {
 
     raytracer
         .render()
-        .save(&Path::new("images/amogus.png"))
+        .save(Path::new("images/amogus.png"))
         .unwrap();
 }

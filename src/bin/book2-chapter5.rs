@@ -176,11 +176,7 @@ fn perlin(
         1000.,
         perlin_lambertian.clone(),
     ));
-    world.push(Sphere::new(
-        point![0., 2., 0.],
-        2.,
-        perlin_lambertian.clone(),
-    ));
+    world.push(Sphere::new(point![0., 2., 0.], 2., perlin_lambertian));
 
     raytracer
 }

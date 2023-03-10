@@ -36,6 +36,7 @@ impl Perlin {
     }
 
     /// Generate Perlin noise.
+    #[allow(clippy::needless_range_loop)]
     pub fn noise(&self, point: Point) -> f32 {
         let u = point.x() - point.x().floor();
         let v = point.y() - point.y().floor();
@@ -93,6 +94,7 @@ impl Perlin {
         }
     }
 
+    #[allow(clippy::needless_range_loop)]
     fn trilinear_interpolation(c: &[[[Point; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
         let u = u * u * (3. - 2. * u);
         let v = v * v * (3. - 2. * v);
@@ -113,5 +115,11 @@ impl Perlin {
         }
 
         accum
+    }
+}
+
+impl Default for Perlin {
+    fn default() -> Self {
+        Self::new()
     }
 }
