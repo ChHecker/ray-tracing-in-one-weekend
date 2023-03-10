@@ -246,6 +246,14 @@ impl FromIterator<f32> for Color {
     }
 }
 
+pub const WHITE: Color = Color(1., 1., 1.);
+pub const BLACK: Color = Color(0., 0., 0.);
+pub const GRAY: Color = Color(0.5, 0.5, 0.5);
+pub const GREY: Color = Color(0.5, 0.5, 0.5);
+pub const RED: Color = Color(1., 0., 0.);
+pub const GREEN: Color = Color(0., 1., 0.);
+pub const BLUE: Color = Color(0., 0., 1.);
+
 /// Vector in 3D Cartesian space.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point(f32, f32, f32);

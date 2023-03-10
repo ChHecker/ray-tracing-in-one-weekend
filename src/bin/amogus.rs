@@ -2,12 +2,13 @@ use std::path::Path;
 
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
+use ray_tracing_in_one_weekend::vec3::{GREEN, RED};
 use ray_tracing_in_one_weekend::*;
 
 fn amogus(world: &mut HittableList) {
-    let red_lambertian = Lambertian::solid_color(color![1., 0., 0.]);
+    let red_lambertian = Lambertian::solid_color(RED);
 
-    let green_lambertian = Lambertian::solid_color(color![0., 1., 0.]);
+    let green_lambertian = Lambertian::solid_color(GREEN);
 
     let ground = Sphere::new(point![0., -1000., -1.], 1000., green_lambertian);
     world.push(ground);
