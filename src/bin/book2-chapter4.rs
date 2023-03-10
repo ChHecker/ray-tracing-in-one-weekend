@@ -85,7 +85,8 @@ fn main() {
         image_height,
         samples_per_pixel,
         max_depth,
-    );
+    )
+    .with_progressbar();
     random_world(&mut raytracer.world);
 
     raytracer
