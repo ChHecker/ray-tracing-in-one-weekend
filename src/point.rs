@@ -14,19 +14,23 @@ macro_rules! point {
 
 /// Vector in 3D Cartesian space.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Point(f32, f32, f32);
+pub struct Point {
+    x: f32,
+    y: f32,
+    z: f32,
+}
 
 impl Point {
     pub fn x(&self) -> f32 {
-        self.0
+        self.x
     }
 
     pub fn y(&self) -> f32 {
-        self.1
+        self.y
     }
 
     pub fn z(&self) -> f32 {
-        self.2
+        self.z
     }
 
     /// Dot product.
@@ -183,8 +187,8 @@ impl Point {
 }
 
 impl Vec3 for Point {
-    fn new(r: f32, g: f32, b: f32) -> Self {
-        Point(r, g, b)
+    fn new(x: f32, y: f32, z: f32) -> Self {
+        Point { x, y, z }
     }
 }
 
@@ -192,7 +196,7 @@ impl ops::Add for Point {
     type Output = Self;
 
     fn add(self, rhs: Point) -> Self::Output {
-        Point(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+        Point::new(self.x + rhs.x, self.y + rhs.y, self.z + rhs.z)
     }
 }
 
@@ -206,7 +210,7 @@ impl ops::Sub for Point {
     type Output = Self;
 
     fn sub(self, rhs: Point) -> Self::Output {
-        Point(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        Point::new(self.x - rhs.x, self.y - rhs.y, self.z - rhs.z)
     }
 }
 
@@ -220,7 +224,7 @@ impl ops::Mul<f32> for Point {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Point(rhs * self.0, rhs * self.1, rhs * self.2)
+        Point::new(rhs * self.x, rhs * self.y, rhs * self.z)
     }
 }
 
@@ -228,7 +232,7 @@ impl ops::Mul<Point> for f32 {
     type Output = Point;
 
     fn mul(self, rhs: Point) -> Self::Output {
-        Point(self * rhs.0, self * rhs.1, self * rhs.2)
+        Point::new(self * rhs.x, self * rhs.y, self * rhs.z)
     }
 }
 
@@ -242,7 +246,7 @@ impl ops::Div<f32> for Point {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Point(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+        Point::new(self.x / rhs, self.y / rhs, self.z / rhs)
     }
 }
 
@@ -256,7 +260,7 @@ impl ops::Neg for Point {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Point(-self.0, -self.1, -self.2)
+        Point::new(-self.x, -self.y, -self.z)
     }
 }
 
@@ -265,9 +269,20 @@ impl ops::Index<u8> for Point {
 
     fn index(&self, index: u8) -> &Self::Output {
         match index {
-            0 => &self.0,
-            1 => &self.1,
-            2 => &self.2,
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bound"),
+        }
+    }
+}
+
+impl ops::IndexMut<u8> for Point {
+    fn index_mut(&mut self, index: u8) -> &mut Self::Output {
+        match index {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _ => panic!("Index out of bound"),
         }
     }
