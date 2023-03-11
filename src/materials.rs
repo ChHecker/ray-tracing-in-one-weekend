@@ -4,6 +4,7 @@ use std::fmt::Debug;
 
 use rand::Rng;
 
+use crate::color::BLACK;
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
@@ -15,6 +16,9 @@ use crate::*;
 pub trait Material: Debug + Send + Sync {
     /// Scatters the incoming [`Ray`] into an outgoing [`Ray`] and includes [`Color`] information.
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
+
+    /// Checks if and what color light is emitted at a certain point.
+    fn emit(&self, u: f32, v: f32, point: Point) -> Color;
 }
 
 /// A realistic perfectly diffusive material.
@@ -52,6 +56,10 @@ impl<T: Texture> Material for Lambertian<T> {
             scattered,
             self.albedo.color_at(hit.u(), hit.v(), hit.point()),
         ))
+    }
+
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+        BLACK
     }
 }
 
@@ -91,6 +99,10 @@ impl<T: Texture> Material for Metal<T> {
             ));
         }
         None
+    }
+
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+        BLACK
     }
 }
 
@@ -138,5 +150,38 @@ impl Material for Dielectric {
 
         let scattered = Ray::new(hit.point(), direction).with_time(ray.time());
         Some((scattered, color![1., 1., 1.]))
+    }
+
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+        BLACK
+    }
+}
+
+/// A diffusive light-emitting material.
+#[derive(Clone, Debug)]
+pub struct DiffusiveLight<T: Texture> {
+    texture: T,
+}
+
+impl<T: Texture> DiffusiveLight<T> {
+    pub fn new(texture: T) -> Self {
+        Self { texture }
+    }
+}
+
+impl DiffusiveLight<SolidColor> {
+    pub fn solid_color(color: Color) -> Self {
+        let texture = SolidColor::new(color);
+        Self { texture }
+    }
+}
+
+impl<T: Texture> Material for DiffusiveLight<T> {
+    fn scatter(&self, _ray: Ray, _hit: HitRecord) -> Option<(Ray, Color)> {
+        None
+    }
+
+    fn emit(&self, u: f32, v: f32, hit_point: Point) -> Color {
+        self.texture.color_at(u, v, hit_point)
     }
 }

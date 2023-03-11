@@ -42,7 +42,7 @@ impl Camera {
     /// - `vertical_fov`: Angle of the vertical field of view (between point the camera is facing and the upper border of the viewport).
     /// - `aspect_ratio`: Aspect ratio of the viewport.
     /// - `aperture`: Aperture for the purpose of depth-of-field (double the radius of the lense).
-    /// - `lens_radius` Radius of the lense for the purpose of depth-of-field (half the aperture).
+    /// - `focus_distance`: Distance at which objects appear in focus.
     pub fn new(
         lookfrom: Point,
         lookat: Point,

@@ -353,3 +353,149 @@ where
         ))
     }
 }
+
+#[derive(Clone, Debug)]
+pub enum Plane {
+    XY,
+    YZ,
+    XZ,
+}
+
+/// Axis-aligned planes.
+impl Plane {
+    /// Return the indices of the axes along the [`Plane`].
+    pub fn axes(&self) -> (u8, u8, u8) {
+        match self {
+            Plane::XY => (0, 1, 2),
+            Plane::YZ => (1, 2, 0),
+            Plane::XZ => (0, 2, 1),
+        }
+    }
+}
+
+/// A flat rectangle along the x y plane.
+///
+/// # Fields
+/// - `orientation`: Along which [`Plane`] the [`Rectangle`] should be oriented.
+/// - `center`: Its center.
+/// - `width`: Its width, defined along the first of the two axes of the [`Plane`].
+/// - `height`: Its height, defined along the second of the two axes of the [`Plane`].
+/// - `material`: Its material.
+#[derive(Clone, Debug)]
+pub struct Rectangle<M: Material, P: Position> {
+    orientation: Plane,
+    center: P,
+    width: f32,
+    height: f32,
+    material: M,
+}
+
+impl<M: Material, P: Position> Rectangle<M, P> {
+    pub fn material(&self) -> &M {
+        &self.material
+    }
+
+    pub fn width(&self) -> f32 {
+        self.width
+    }
+
+    pub fn height(&self) -> f32 {
+        self.height
+    }
+}
+
+impl<M: Material> Rectangle<M, Stationary> {
+    pub fn new(orientation: Plane, center: Point, width: f32, height: f32, material: M) -> Self {
+        let center = Stationary { position: center };
+        Self {
+            orientation,
+            center,
+            width,
+            height,
+            material,
+        }
+    }
+
+    pub fn xy(center: Point, width: f32, height: f32, material: M) -> Self {
+        let orientation = Plane::XY;
+        let center = Stationary { position: center };
+        Self {
+            orientation,
+            center,
+            width,
+            height,
+            material,
+        }
+    }
+
+    pub fn yz(center: Point, width: f32, height: f32, material: M) -> Self {
+        let orientation = Plane::YZ;
+        let center = Stationary { position: center };
+        Self {
+            orientation,
+            center,
+            width,
+            height,
+            material,
+        }
+    }
+
+    pub fn xz(center: Point, width: f32, height: f32, material: M) -> Self {
+        let orientation = Plane::XZ;
+        let center = Stationary { position: center };
+        Self {
+            orientation,
+            center,
+            width,
+            height,
+            material,
+        }
+    }
+
+    pub fn position(&self) -> Point {
+        self.center.position()
+    }
+}
+
+impl<M: Material + Clone + 'static> Hittable for Rectangle<M, Stationary> {
+    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        let (a_index, b_index, c_index) = self.orientation.axes();
+        let a_min = self.position()[a_index] - self.width / 2.;
+        let a_max = self.position()[a_index] + self.width / 2.;
+        let b_min = self.position()[b_index] - self.height / 2.;
+        let b_max = self.position()[b_index] + self.height / 2.;
+
+        let t = (self.position()[c_index] - ray.origin()[c_index]) / ray.direction()[c_index];
+        if t < t_min || t > t_max {
+            return None;
+        }
+
+        let point = ray.at(t);
+        let a = point[a_index];
+        let b = point[b_index];
+        if a < a_min || a > a_max || b < b_min || b > b_max {
+            return None;
+        }
+
+        let u = (a - a_min) / (a_max - a_min);
+        let v = (b - b_min) / (b_max - b_min);
+        let mut normal = point![0., 0., 0.];
+        normal[c_index] = 1.;
+
+        Some(HitRecord::from_ray(
+            point,
+            u,
+            v,
+            normal,
+            t,
+            &self.material,
+            ray,
+        ))
+    }
+
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
+        let minimum = self.position() - point![self.width / 2., self.height / 2., 0.0001];
+        let maximum = self.position() + point![self.width / 2., self.height / 2., 0.0001];
+        Some(Aabb::new(minimum, maximum))
+    }
+}

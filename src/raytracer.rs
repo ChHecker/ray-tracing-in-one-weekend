@@ -29,6 +29,7 @@ use crate::*;
 pub struct Raytracer {
     pub world: HittableList,
     camera: Camera,
+    background: Color,
     image_width: u16,
     image_height: u16,
     samples_per_pixel: u16,
@@ -39,6 +40,7 @@ pub struct Raytracer {
 impl Raytracer {
     pub fn new(
         camera: Camera,
+        background: Color,
         image_width: u16,
         image_height: u16,
         samples_per_pixel: u16,
@@ -47,6 +49,7 @@ impl Raytracer {
         Self {
             world: HittableList::new(),
             camera,
+            background,
             image_width,
             image_height,
             samples_per_pixel,
@@ -68,6 +71,7 @@ impl Raytracer {
         Self {
             world: self.world,
             camera: self.camera,
+            background: self.background,
             image_width: self.image_width,
             image_height: self.image_height,
             samples_per_pixel: self.samples_per_pixel,
@@ -126,8 +130,12 @@ impl Raytracer {
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
                     let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
-                    pixel_color +=
-                        Raytracer::ray_color(&world, self.camera.get_ray(u, v), self.max_depth);
+                    pixel_color += Raytracer::ray_color(
+                        &world,
+                        self.camera.get_ray(u, v),
+                        self.background,
+                        self.max_depth,
+                    );
                 }
                 pixel_color = color!(
                     (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
@@ -164,8 +172,12 @@ impl Raytracer {
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
                     let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
-                    pixel_color +=
-                        Raytracer::ray_color(&world, self.camera.get_ray(u, v), self.max_depth);
+                    pixel_color += Raytracer::ray_color(
+                        &world,
+                        self.camera.get_ray(u, v),
+                        self.background,
+                        self.max_depth,
+                    );
                 }
                 pixel_color = color!(
                     (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
@@ -184,35 +196,52 @@ impl Raytracer {
     }
 
     /// Colors the [`Ray`] according to hits.
-    fn ray_color(world_option: &HittableListOptions, ray: Ray, depth: u16) -> Color {
+    fn ray_color(
+        world_option: &HittableListOptions,
+        ray: Ray,
+        background: Color,
+        depth: u16,
+    ) -> Color {
         if depth == 0 {
             return BLACK;
         }
 
         match world_option {
-            HittableListOptions::HittableList(world) => {
-                if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
-                    if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-                        return attenuation
-                            * Raytracer::ray_color(world_option, scattered, depth - 1);
-                    }
-                    return color![0., 0., 0.];
-                }
-            }
             HittableListOptions::Bvh(world) => {
                 if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
+                    let emitted = hit.material().emit(hit.u(), hit.v(), hit.point());
                     if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
-                        return attenuation
-                            * Raytracer::ray_color(world_option, scattered, depth - 1);
+                        return emitted
+                            + attenuation
+                                * Raytracer::ray_color(
+                                    world_option,
+                                    scattered,
+                                    background,
+                                    depth - 1,
+                                );
                     }
-                    return color![0., 0., 0.];
+                    return emitted;
+                }
+            }
+            HittableListOptions::HittableList(world) => {
+                if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
+                    let emitted = hit.material().emit(hit.u(), hit.v(), hit.point());
+                    if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
+                        return emitted
+                            + attenuation
+                                * Raytracer::ray_color(
+                                    world_option,
+                                    scattered,
+                                    background,
+                                    depth - 1,
+                                );
+                    }
+                    return emitted;
                 }
             }
         }
 
-        let unit_direction = ray.direction().unit_vector();
-        let t = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - t) * color![1., 1., 1.] + t * color![0.5, 0.7, 1.0]
+        background
     }
 }
 
