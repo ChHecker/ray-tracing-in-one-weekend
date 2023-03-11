@@ -125,29 +125,25 @@ impl Raytracer {
                 let i = index % self.image_width as usize;
                 let j = self.image_height as usize - index / self.image_width as usize - 1;
 
-                let mut pixel_color = color![0., 0., 0.];
-
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
                     let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
-                    pixel_color += Raytracer::ray_color(
+                    *color += Raytracer::ray_color(
                         &world,
                         self.camera.get_ray(u, v),
                         self.background,
                         self.max_depth,
                     );
                 }
-                pixel_color = color!(
-                    (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.g() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.b() / self.samples_per_pixel as f32).sqrt(),
-                );
 
                 if let Some(bar) = &self.progressbar {
                     bar.inc(1);
                 }
 
-                *color = pixel_color;
+                *color = color
+                    .into_iter()
+                    .map(|color| (color / self.samples_per_pixel as f32).sqrt())
+                    .collect();
             });
 
         colors
@@ -156,8 +152,7 @@ impl Raytracer {
     fn render_multithreaded_without_bvh(self) -> Vec<Color> {
         let world = HittableListOptions::HittableList(self.world);
 
-        let mut colors =
-            vec![color![0., 0., 0.]; self.image_height as usize * self.image_width as usize];
+        let mut colors = vec![BLACK; self.image_height as usize * self.image_width as usize];
 
         colors
             .par_iter_mut()
@@ -167,29 +162,25 @@ impl Raytracer {
                 let i = index % self.image_width as usize;
                 let j = self.image_height as usize - index / self.image_width as usize - 1;
 
-                let mut pixel_color = color![0., 0., 0.];
-
                 for _ in 0..self.samples_per_pixel {
                     let u = (i as f32 + rng.gen::<f32>()) / (self.image_width - 1) as f32;
                     let v = (j as f32 + rng.gen::<f32>()) / (self.image_height - 1) as f32;
-                    pixel_color += Raytracer::ray_color(
+                    *color += Raytracer::ray_color(
                         &world,
                         self.camera.get_ray(u, v),
                         self.background,
                         self.max_depth,
                     );
                 }
-                pixel_color = color!(
-                    (pixel_color.r() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.g() / self.samples_per_pixel as f32).sqrt(),
-                    (pixel_color.b() / self.samples_per_pixel as f32).sqrt(),
-                );
 
                 if let Some(bar) = &self.progressbar {
                     bar.inc(1);
                 }
 
-                *color = pixel_color;
+                *color = color
+                    .into_iter()
+                    .map(|color| (color / self.samples_per_pixel as f32).sqrt())
+                    .collect();
             });
 
         colors
