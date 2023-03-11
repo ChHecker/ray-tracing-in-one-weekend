@@ -158,6 +158,8 @@ impl Material for Dielectric {
 }
 
 /// A diffusive light-emitting material.
+///
+/// Light emission does not work correctly yet. //TODO
 #[derive(Clone, Debug)]
 pub struct DiffusiveLight<T: Texture> {
     texture: T,
