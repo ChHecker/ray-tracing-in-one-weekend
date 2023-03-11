@@ -147,7 +147,7 @@ impl HittableList {
     }
 
     /// Remove the last [`Hittable`] and return it.
-    fn pop(&mut self) -> Option<HittableBox> {
+    pub fn pop(&mut self) -> Option<HittableBox> {
         self.hittables.pop()
     }
 
