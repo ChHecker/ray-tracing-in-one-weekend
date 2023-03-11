@@ -16,19 +16,23 @@ macro_rules! color {
 ///
 /// The colors a stored in RGB with each value between 0 and 1.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Color(f32, f32, f32);
+pub struct Color {
+    r: f32,
+    g: f32,
+    b: f32,
+}
 
 impl Color {
     pub fn r(&self) -> f32 {
-        self.0
+        self.r
     }
 
     pub fn g(&self) -> f32 {
-        self.1
+        self.g
     }
 
     pub fn b(&self) -> f32 {
-        self.2
+        self.b
     }
 
     /// Formats the [`Color`] as a [`String`], converting the `f32` RGB values to `u8`.
@@ -53,7 +57,7 @@ impl Color {
 
 impl Vec3 for Color {
     fn new(r: f32, g: f32, b: f32) -> Self {
-        Color(r, g, b)
+        Color { r, g, b }
     }
 }
 
@@ -81,7 +85,7 @@ impl ops::Add for Color {
     type Output = Self;
 
     fn add(self, rhs: Color) -> Self::Output {
-        Color(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+        Color::new(self.r + rhs.r, self.g + rhs.g, self.b + rhs.b)
     }
 }
 
@@ -95,7 +99,7 @@ impl ops::Sub for Color {
     type Output = Self;
 
     fn sub(self, rhs: Color) -> Self::Output {
-        Color(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+        Color::new(self.r - rhs.r, self.g - rhs.g, self.b - rhs.b)
     }
 }
 
@@ -109,7 +113,7 @@ impl ops::Mul<f32> for Color {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Color(rhs * self.0, rhs * self.1, rhs * self.2)
+        Color::new(rhs * self.r, rhs * self.g, rhs * self.b)
     }
 }
 
@@ -117,7 +121,7 @@ impl ops::Mul<Color> for f32 {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {
-        Color(self * rhs.0, self * rhs.1, self * rhs.2)
+        Color::new(self * rhs.r, self * rhs.g, self * rhs.b)
     }
 }
 
@@ -131,7 +135,7 @@ impl ops::Mul for Color {
     type Output = Self;
 
     fn mul(self, rhs: Color) -> Self::Output {
-        Color(rhs.0 * self.0, rhs.1 * self.1, rhs.2 * self.2)
+        Color::new(rhs.r * self.r, rhs.g * self.g, rhs.b * self.b)
     }
 }
 
@@ -145,7 +149,7 @@ impl ops::Div<f32> for Color {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Color(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+        Color::new(self.r / rhs, self.g / rhs, self.b / rhs)
     }
 }
 
@@ -159,7 +163,7 @@ impl ops::Neg for Color {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Color(-self.0, -self.1, -self.2)
+        Color::new(-self.r, -self.g, -self.b)
     }
 }
 
@@ -168,9 +172,9 @@ impl ops::Index<u8> for Color {
 
     fn index(&self, index: u8) -> &Self::Output {
         match index {
-            0 => &self.0,
-            1 => &self.1,
-            2 => &self.2,
+            0 => &self.r,
+            1 => &self.g,
+            2 => &self.b,
             _ => panic!("Index out of bound"),
         }
     }
@@ -212,21 +216,49 @@ impl Iterator for Color3Iter {
 impl FromIterator<f32> for Color {
     fn from_iter<T: IntoIterator<Item = f32>>(iter: T) -> Self {
         let mut iter = iter.into_iter();
-        Self(
-            iter.next().unwrap(),
-            iter.next().unwrap(),
-            iter.next().unwrap(),
-        )
+        Self {
+            r: iter.next().unwrap(),
+            g: iter.next().unwrap(),
+            b: iter.next().unwrap(),
+        }
     }
 }
 
-pub const WHITE: Color = Color(1., 1., 1.);
-pub const BLACK: Color = Color(0., 0., 0.);
-pub const GRAY: Color = Color(0.5, 0.5, 0.5);
-pub const GREY: Color = Color(0.5, 0.5, 0.5);
-pub const RED: Color = Color(1., 0., 0.);
-pub const GREEN: Color = Color(0., 1., 0.);
-pub const BLUE: Color = Color(0., 0., 1.);
+pub const WHITE: Color = Color {
+    r: 1.,
+    g: 1.,
+    b: 1.,
+};
+pub const BLACK: Color = Color {
+    r: 0.,
+    g: 0.,
+    b: 0.,
+};
+pub const GRAY: Color = Color {
+    r: 0.5,
+    g: 0.5,
+    b: 0.5,
+};
+pub const GREY: Color = Color {
+    r: 0.5,
+    g: 0.5,
+    b: 0.5,
+};
+pub const RED: Color = Color {
+    r: 1.,
+    g: 0.,
+    b: 0.,
+};
+pub const GREEN: Color = Color {
+    r: 0.,
+    g: 1.,
+    b: 0.,
+};
+pub const BLUE: Color = Color {
+    r: 0.,
+    g: 0.,
+    b: 1.,
+};
 
 #[cfg(test)]
 mod tests {
