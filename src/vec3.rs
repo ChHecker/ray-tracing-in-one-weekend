@@ -67,16 +67,15 @@ pub fn random_vector_in_range(min: f32, max: f32) -> Vector3<f32> {
 }
 
 pub fn random_vector_in_unit_sphere() -> Vector3<f32> {
-    let mut rng = rand::thread_rng();
     loop {
-        let rand = Vector3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
+        let rand = random_vector_in_range(-1., 1.);
         if rand.norm_squared() < 1. {
             return rand;
         }
     }
 }
 
-pub fn random_unit_vector() -> Vector3<f32> {
+pub fn random_unit_vector_in_unit_sphere() -> Vector3<f32> {
     random_vector_in_unit_sphere().normalize()
 }
 
