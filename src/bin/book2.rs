@@ -7,6 +7,7 @@ use ray_tracing_in_one_weekend::color::{BLACK, BLUE, GREEN, RED, WHITE};
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
 use ray_tracing_in_one_weekend::textures::*;
+use ray_tracing_in_one_weekend::vec3::random_vector_in_range;
 use ray_tracing_in_one_weekend::*;
 
 #[allow(dead_code)]
@@ -263,7 +264,7 @@ fn light(
     // let noise = Lambertian::new(PerlinNoiseTexture::new(4.));
     let red = Lambertian::solid_color(RED);
     let green = Lambertian::solid_color(GREEN);
-    let light = DiffusiveLight::solid_color(4. * WHITE);
+    let light = DiffuseLight::solid_color(4. * WHITE);
 
     // let sphere1 = Sphere::new(vector![0., -1000., 0.], 1000., noise.clone());
     // world.push(sphere1);
@@ -296,7 +297,7 @@ fn cornell(
     max_depth: u16,
 ) -> Raytracer {
     // Camera
-    let lookfrom = vector![0., 0., 200.];
+    let lookfrom = vector![0., 0., 250.];
     let lookat = vector![0., 0., 0.];
     let vup = vector![0., 1., 0.];
     let camera = Camera::new(
@@ -324,30 +325,149 @@ fn cornell(
     let red = Lambertian::solid_color(color![0.65, 0.05, 0.05]);
     let white = Lambertian::solid_color(color![0.73, 0.73, 0.73]);
     let green = Lambertian::solid_color(color![0.15, 0.45, 0.15]);
-    let light = DiffusiveLight::solid_color(5. * WHITE);
+    let light = DiffuseLight::solid_color(5. * WHITE);
 
     let floor = Rectangle::xz(vector![0., -200., 0.], 400., 400., white.clone());
     let roof = Rectangle::xz(vector![0., 200., 0.], 400., 400., white.clone());
     let back_wall = Rectangle::xy(vector![0., 0., -200.], 400., 400., white.clone());
     let left_wall = Rectangle::yz(vector![-200., 0., 0.], 400., 400., green);
     let right_wall = Rectangle::yz(vector![200., 0., 0.], 400., 400., red);
-    // let light_rect = Rectangle::xz(vector![0., 400., 0.], 100., 100., light);
-    let light_sphere = Sphere::new(vector![0., 0., 0.], 20., light);
+    let light_rect = Rectangle::xz(vector![0., 200., 0.], 200., 200., light);
 
-    let box1 = Cuboid::new(vector![0., -125., -50.], 80., 150., 80., white.clone())
+    let box1 = Cuboid::new(vector![30., -75., -50.], 100., 150., 100., white.clone())
         .with_rotation(Rotation3::new((15f32).to_radians() * Vector3::y()));
-    let dustbox1 = ConstantMedium::new(box1, Isotropic::solid_color(WHITE), 1.);
-    let box2 = Cuboid::new(vector![100., -100., 100.], 80., 200., 80., white.clone())
+    let dust_box1 = ConstantMedium::solid_color(box1, WHITE, 0.01);
+    let box2 = Cuboid::new(vector![-20., -50., -100.], 120., 300., 120., white.clone())
         .with_rotation(Rotation3::new((-18f32).to_radians() * Vector3::y()));
+    let dust_box2 = ConstantMedium::solid_color(box2, BLACK, 0.01);
 
     world.push(floor);
     world.push(roof);
     world.push(back_wall);
     world.push(left_wall);
     world.push(right_wall);
-    world.push(light_sphere);
-    world.push(dustbox1);
-    world.push(box2);
+    world.push(light_rect);
+    world.push(dust_box1);
+    world.push(dust_box2);
+
+    raytracer
+}
+
+#[allow(dead_code)]
+fn final_scene(
+    aspect_ratio: f32,
+    image_width: u16,
+    image_height: u16,
+    samples_per_pixel: u16,
+    max_depth: u16,
+) -> Raytracer {
+    // Camera
+    let lookfrom = vector![478., 278., -600.];
+    let lookat = vector![278., 278., 0.];
+    let vup = vector![0., 1., 0.];
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        (40f32).to_radians(),
+        aspect_ratio,
+        0.,
+        1.,
+    );
+
+    let mut raytracer = Raytracer::new(
+        camera,
+        BLACK,
+        image_width,
+        image_height,
+        samples_per_pixel,
+        max_depth,
+    )
+    .with_progressbar();
+
+    let world = &mut raytracer.world;
+
+    let mut rng = rand::thread_rng();
+
+    let ground = Lambertian::solid_color(color![0.48, 0.83, 0.53]);
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.;
+            let x0 = -1000. + i as f32 * w;
+            let y0 = 0.;
+            let z0 = -1000. + j as f32 * w;
+            let x1 = x0 + w / 2.;
+            let y1 = rng.gen_range(1.0..101.) / 2.;
+            let z1 = z0 + w / 2.;
+
+            world.push(Cuboid::new(
+                vector![x1, y1, z1],
+                2. * (x1 - x0).abs(),
+                2. * (y1 - y0).abs(),
+                2. * (z1 - z0).abs(),
+                ground.clone(),
+            ))
+        }
+    }
+
+    let light = DiffuseLight::solid_color(7. * WHITE);
+    world.push(Rectangle::xz(
+        vector![273., 554., 279.5],
+        150.,
+        132.5,
+        light,
+    ));
+
+    let center1 = vector![400., 400., 200.];
+    let center2 = center1 + vector![30., 0., 0.];
+    let moving_sphere_material = Lambertian::solid_color(color![0.7, 0.4, 0.1]);
+
+    world.push(Sphere::new(center1, 50., moving_sphere_material).moving(center2, 0., 1.));
+    world.push(Sphere::new(
+        vector![260., 150., 45.],
+        50.,
+        Dielectric::new(1.5),
+    ));
+    world.push(Sphere::new(
+        vector![0., 150., 145.],
+        50.,
+        Metal::solid_color(color![0.8, 0.8, 0.9], 1.),
+    ));
+
+    let boundary = Sphere::new(vector![360., 150., 145.], 70., Dielectric::new(1.5));
+    world.push(boundary.clone());
+    world.push(ConstantMedium::solid_color(
+        boundary,
+        color![0.2, 0.4, 0.9],
+        0.2,
+    ));
+    let boundary = Sphere::new(vector![0., 0., 0.], 5000., Dielectric::new(1.5));
+    world.push(ConstantMedium::solid_color(boundary, BLACK, 0.0001));
+
+    let link = Lambertian::new(ImageTexture::open("link.png").unwrap());
+    world.push(Sphere::new(vector![400., 200., 400.], 100., link));
+    let pertext = PerlinNoiseTexture::new(0.1);
+    world.push(Sphere::new(
+        vector![220., 280., 300.],
+        80.,
+        Lambertian::new(pertext),
+    ));
+
+    let mut boxes2 = HittableList::new(vector![-100., 270., 395.]);
+    let white = Lambertian::solid_color(color![0.73, 0.73, 0.73]);
+    let ns = 1000;
+    for _ in 0..ns {
+        boxes2.push(Sphere::new(
+            random_vector_in_range(0., 165.),
+            10.,
+            white.clone(),
+        ));
+    }
+    boxes2 = boxes2.with_rotation(Rotation3::new((15f32).to_radians() * Vector3::y()));
+
+    world.push(boxes2);
 
     raytracer
 }
@@ -360,19 +480,20 @@ enum Scene {
     Image,
     Light,
     Cornell,
+    Final,
 }
 
 fn main() {
     // Image
-    let aspect_ratio = 16. / 10.;
+    let aspect_ratio = 1.;
     let image_width: u16 = 800;
     let image_height = (image_width as f32 / aspect_ratio) as u16;
-    let samples_per_pixel: u16 = 200;
+    let samples_per_pixel: u16 = 100;
     let max_depth = 20;
 
     let path: &Path;
 
-    let scene = Scene::Cornell;
+    let scene = Scene::Final;
     let raytracer = match scene {
         Scene::Random => {
             path = Path::new("images/book2-chapter4-random.png");
@@ -427,6 +548,16 @@ fn main() {
         Scene::Cornell => {
             path = Path::new("images/book2-chapter7-cornell.png");
             cornell(
+                aspect_ratio,
+                image_width,
+                image_height,
+                samples_per_pixel,
+                max_depth,
+            )
+        }
+        Scene::Final => {
+            path = Path::new("images/book2-chapter10-final.png");
+            final_scene(
                 aspect_ratio,
                 image_width,
                 image_height,
