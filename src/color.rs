@@ -1,6 +1,7 @@
 use std::ops;
 
 use image::Rgb;
+use rand::Rng;
 
 use crate::*;
 
@@ -23,6 +24,10 @@ pub struct Color {
 }
 
 impl Color {
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        Color { r, g, b }
+    }
+
     pub fn r(&self) -> f32 {
         self.r
     }
@@ -33,6 +38,22 @@ impl Color {
 
     pub fn b(&self) -> f32 {
         self.b
+    }
+
+    /// Creates a random vector with each element between 0 and 1.
+    pub fn random() -> Self {
+        let mut rng = rand::thread_rng();
+        Color::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+    }
+
+    /// Creates a random vector with each element in a range.
+    pub fn random_in_range(min: f32, max: f32) -> Self {
+        let mut rng = rand::thread_rng();
+        Color::new(
+            min + rng.gen::<f32>() * (max - min),
+            min + rng.gen::<f32>() * (max - min),
+            min + rng.gen::<f32>() * (max - min),
+        )
     }
 
     /// Formats the [`Color`] as a [`String`], converting the `f32` RGB values to `u8`.
@@ -52,12 +73,6 @@ impl Color {
             (256. * self.g().clamp(0., 0.999)) as u8,
             (256. * self.b().clamp(0., 0.999)) as u8,
         ]
-    }
-}
-
-impl Vec3 for Color {
-    fn new(r: f32, g: f32, b: f32) -> Self {
-        Color { r, g, b }
     }
 }
 

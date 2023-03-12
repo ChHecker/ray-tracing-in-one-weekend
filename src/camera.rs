@@ -3,6 +3,7 @@
 use rand::Rng;
 
 use crate::ray::Ray;
+use crate::vec3::random_in_unit_disk;
 use crate::*;
 
 /// A struct for a camera.
@@ -10,7 +11,7 @@ use crate::*;
 /// This stores all necessary information about the viewport as well as the depth-of-field.
 ///
 /// # Fields
-/// - `origin`: [Point] where the camera is positioned.
+/// - `origin`: Point where the camera is positioned.
 /// - `lower_left_corner`: Lower left corner of the viewport.
 /// - `horizontal`: Horizontal stretch of the viewport.
 /// - `vertical`: Vertical stretch of the viewport.
@@ -21,13 +22,13 @@ use crate::*;
 /// - `time`: Optional exposure time.
 #[derive(Clone, Debug)]
 pub struct Camera {
-    origin: Point,
-    lower_left_corner: Point,
-    horizontal: Point,
-    vertical: Point,
-    u: Point,
-    v: Point,
-    _w: Point,
+    origin: Vector3<f32>,
+    lower_left_corner: Vector3<f32>,
+    horizontal: Vector3<f32>,
+    vertical: Vector3<f32>,
+    u: Vector3<f32>,
+    v: Vector3<f32>,
+    _w: Vector3<f32>,
     lens_radius: f32,
     time: Option<(f32, f32)>,
 }
@@ -37,16 +38,16 @@ impl Camera {
     ///
     /// # Parameters
     /// - `lookfrom`: Position of the camera.
-    /// - `lookat`: [Point] the camera is facing.
+    /// - `lookat`: [Vector3<f32>] the camera is facing.
     /// - `vup`: Upwards direction of the camera.
     /// - `vertical_fov`: Angle of the vertical field of view (between point the camera is facing and the upper border of the viewport).
     /// - `aspect_ratio`: Aspect ratio of the viewport.
     /// - `aperture`: Aperture for the purpose of depth-of-field (double the radius of the lense).
     /// - `focus_distance`: Distance at which objects appear in focus.
     pub fn new(
-        lookfrom: Point,
-        lookat: Point,
-        vup: Point,
+        lookfrom: Vector3<f32>,
+        lookat: Vector3<f32>,
+        vup: Vector3<f32>,
         vertical_fov: f32,
         aspect_ratio: f32,
         aperture: f32,
@@ -56,8 +57,8 @@ impl Camera {
         let viewport_height = 2. * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let w = (lookfrom - lookat).unit_vector();
-        let u = vup.cross(&w).unit_vector();
+        let w = (lookfrom - lookat).normalize();
+        let u = vup.cross(&w).normalize();
         let v = w.cross(&u);
 
         let horizontal = focus_distance * viewport_width * u;
@@ -87,8 +88,8 @@ impl Camera {
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let mut rng = rand::thread_rng();
 
-        let random_disk = self.lens_radius * Point::random_in_unit_disk();
-        let offset = self.u * random_disk.x() + self.v * random_disk.y();
+        let random_disk = self.lens_radius * random_in_unit_disk();
+        let offset = self.u * random_disk.x + self.v * random_disk.y;
 
         let ray = Ray::new(
             self.origin + offset,
@@ -109,9 +110,9 @@ impl Camera {
 impl Default for Camera {
     fn default() -> Self {
         Self::new(
-            point![0., 0., 0.],
-            point![0., 0., -1.],
-            point![0., 1., 0.],
+            vector![0., 0., 0.],
+            vector![0., 0., -1.],
+            vector![0., 1., 0.],
             std::f32::consts::FRAC_PI_6,
             16. / 9.,
             0.,

@@ -17,22 +17,22 @@ use crate::*;
 /// - `material`: [Material] that was hit.
 #[derive(Clone, Debug)]
 pub struct HitRecord<'a> {
-    point: Point,
-    u: f32,
-    v: f32,
-    normal: Point,
-    t: f32,
-    front_face: bool,
-    material: &'a dyn Material,
+    pub point: Vector3<f32>,
+    pub u: f32,
+    pub v: f32,
+    pub normal: Vector3<f32>,
+    pub t: f32,
+    pub front_face: bool,
+    pub material: &'a dyn Material,
 }
 
 impl<'a> HitRecord<'a> {
     /// Create a hit record.
     pub fn new(
-        point: Point,
+        point: Vector3<f32>,
         u: f32,
         v: f32,
-        normal: Point,
+        normal: Vector3<f32>,
         t: f32,
         front_face: bool,
         material: &'a dyn Material,
@@ -52,10 +52,10 @@ impl<'a> HitRecord<'a> {
     ///
     /// This uses a [Ray] and the normal to set `front_face`.
     pub fn from_ray(
-        point: Point,
+        point: Vector3<f32>,
         u: f32,
         v: f32,
-        normal: Point,
+        normal: Vector3<f32>,
         t: f32,
         material: &'a dyn Material,
         ray: Ray,
@@ -72,36 +72,12 @@ impl<'a> HitRecord<'a> {
         }
     }
 
-    pub fn point(&self) -> Point {
-        self.point
-    }
-
-    pub fn u(&self) -> f32 {
-        self.u
-    }
-
-    pub fn v(&self) -> f32 {
-        self.v
-    }
-
-    pub fn normal(&self) -> Point {
-        self.normal
-    }
-
-    pub fn t(&self) -> f32 {
-        self.t
-    }
-
-    pub fn front_face(&self) -> bool {
-        self.front_face
-    }
-
     pub fn material(&self) -> &'a dyn Material {
         self.material
     }
 
     /// Calculate whether the [Ray] hit the front or the back of the surface.
-    fn face_normal(ray: Ray, outward_normal: Point) -> (bool, Point) {
+    fn face_normal(ray: Ray, outward_normal: Vector3<f32>) -> (bool, Vector3<f32>) {
         let front_face = ray.direction().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal

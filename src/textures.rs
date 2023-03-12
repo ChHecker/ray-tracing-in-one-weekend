@@ -19,7 +19,7 @@ pub trait Texture: Debug + Send + Sync {
     /// # Parameters:
     /// - (`u`, `v`): Coordinates on the surface submanifold (lie inside \[0,1\]).
     /// - `hit_point`: [Point] where the [`ray::Ray`] hit the texture.
-    fn color_at(&self, u: f32, v: f32, hit_point: Point) -> Color;
+    fn color_at(&self, u: f32, v: f32, hit_point: Vector3<f32>) -> Color;
 }
 
 /// A solid color texture.
@@ -35,7 +35,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn color_at(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+    fn color_at(&self, _u: f32, _v: f32, _hit_point: Vector3<f32>) -> Color {
         self.color
     }
 }
@@ -68,9 +68,9 @@ impl CheckerTexture<SolidColor, SolidColor> {
 }
 
 impl<S: Texture, T: Texture> Texture for CheckerTexture<S, T> {
-    fn color_at(&self, u: f32, v: f32, hit_point: Point) -> Color {
+    fn color_at(&self, u: f32, v: f32, hit_point: Vector3<f32>) -> Color {
         let sin_product =
-            (10. * hit_point.x()).sin() * (10. * hit_point.y()).sin() * (10. * hit_point.z()).sin();
+            (10. * hit_point.x).sin() * (10. * hit_point.y).sin() * (10. * hit_point.z).sin();
         if sin_product < 0. {
             self.texture_odd.color_at(u, v, hit_point)
         } else {
@@ -98,10 +98,10 @@ impl PerlinNoiseTexture {
 }
 
 impl Texture for PerlinNoiseTexture {
-    fn color_at(&self, _u: f32, _v: f32, hit_point: Point) -> Color {
+    fn color_at(&self, _u: f32, _v: f32, hit_point: Vector3<f32>) -> Color {
         WHITE
             * 0.5
-            * (1. + (self.scale * hit_point.z() + 10. * self.noise.turbulance(hit_point, 7)).sin())
+            * (1. + (self.scale * hit_point.z + 10. * self.noise.turbulance(hit_point, 7)).sin())
     }
 }
 
@@ -123,7 +123,7 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn color_at(&self, u: f32, v: f32, _hit_point: Point) -> Color {
+    fn color_at(&self, u: f32, v: f32, _hit_point: Vector3<f32>) -> Color {
         let mut i = (u.clamp(0., 1.) * self.image.width() as f32) as u32;
         let mut j = ((1. - v.clamp(0., 1.)) * self.image.height() as f32) as u32;
         if i >= self.image.width() {

@@ -1,6 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
+use crate::vec3::random_in_range;
 use crate::*;
 
 const POINT_COUNT: usize = 256;
@@ -8,7 +9,7 @@ const POINT_COUNT: usize = 256;
 /// Wrapper for Perlin generation.
 #[derive(Clone, Debug)]
 pub struct Perlin {
-    random_points: [Point; POINT_COUNT],
+    random_points: [Vector3<f32>; POINT_COUNT],
     permutation_x: [usize; POINT_COUNT],
     permutation_y: [usize; POINT_COUNT],
     permutation_z: [usize; POINT_COUNT],
@@ -18,9 +19,9 @@ impl Perlin {
     pub fn new() -> Self {
         let mut rng = rand::thread_rng();
 
-        let mut random_points = [point![0., 0., 0.]; POINT_COUNT];
+        let mut random_points = [vector![0., 0., 0.]; POINT_COUNT];
         for i in &mut random_points {
-            *i = Point::random_in_range(-1., 1.).unit_vector();
+            *i = random_in_range(-1., 1.).normalize();
         }
 
         let permutation_x = Perlin::generate_permutation(&mut rng);
@@ -37,20 +38,20 @@ impl Perlin {
 
     /// Generate Perlin noise.
     #[allow(clippy::needless_range_loop)]
-    pub fn noise(&self, point: Point) -> f32 {
-        let u = point.x() - point.x().floor();
-        let v = point.y() - point.y().floor();
-        let w = point.z() - point.z().floor();
+    pub fn noise(&self, point: Vector3<f32>) -> f32 {
+        let u = point.x - point.x.floor();
+        let v = point.y - point.y.floor();
+        let w = point.z - point.z.floor();
 
         let u = u * u * (3. - 2. * u);
         let v = v * v * (3. - 2. * v);
         let w = w * w * (3. - 2. * w);
 
-        let i = point.x().floor() as usize;
-        let j = point.y().floor() as usize;
-        let k = point.z().floor() as usize;
+        let i = point.x.floor() as usize;
+        let j = point.y.floor() as usize;
+        let k = point.z.floor() as usize;
 
-        let mut c = [[[point![0., 0., 0.]; 2]; 2]; 2];
+        let mut c = [[[vector![0., 0., 0.]; 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -65,7 +66,7 @@ impl Perlin {
         Perlin::trilinear_interpolation(&c, u, v, w)
     }
 
-    pub fn turbulance(&self, mut point: Point, depth: u8) -> f32 {
+    pub fn turbulance(&self, mut point: Vector3<f32>, depth: u8) -> f32 {
         let mut accum = 0.;
         let mut weight = 1.;
 
@@ -95,7 +96,7 @@ impl Perlin {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn trilinear_interpolation(c: &[[[Point; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
+    fn trilinear_interpolation(c: &[[[Vector3<f32>; 2]; 2]; 2], u: f32, v: f32, w: f32) -> f32 {
         let u = u * u * (3. - 2. * u);
         let v = v * v * (3. - 2. * v);
         let w = w * w * (3. - 2. * w);
@@ -105,7 +106,7 @@ impl Perlin {
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let weight_vector = point![u - i as f32, v - j as f32, w - k as f32];
+                    let weight_vector = vector![u - i as f32, v - j as f32, w - k as f32];
                     accum += (i as f32 * u + (1 - i) as f32 * (1. - u))
                         * (j as f32 * v + (1 - j) as f32 * (1. - v))
                         * (k as f32 * w + (1 - k) as f32 * (1. - w))
