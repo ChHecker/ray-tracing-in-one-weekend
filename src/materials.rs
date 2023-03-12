@@ -8,7 +8,9 @@ use crate::color::BLACK;
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
-use crate::vec3::{near_zero, random_in_unit_sphere, random_unit_vector, reflect, refract};
+use crate::vec3::{
+    near_zero, random_unit_vector, random_vector, random_vector_in_unit_sphere, reflect, refract,
+};
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.
@@ -85,8 +87,11 @@ impl Metal<SolidColor> {
 impl<T: Texture> Material for Metal<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let reflected = reflect(&ray.direction().normalize(), &hit.normal);
-        let scattered = Ray::new(hit.point, reflected + self.fuzz * random_in_unit_sphere())
-            .with_time(ray.time());
+        let scattered = Ray::new(
+            hit.point,
+            reflected + self.fuzz * random_vector_in_unit_sphere(),
+        )
+        .with_time(ray.time());
         if scattered.direction().dot(&hit.normal) > 0. {
             return Some((scattered, self.albedo.color_at(hit.u, hit.v, hit.point)));
         }
@@ -201,7 +206,7 @@ impl Isotropic<SolidColor> {
 
 impl<T: Texture> Material for Isotropic<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
-        let scattered = Ray::new(hit.point, random_in_unit_sphere()).with_time(ray.time());
+        let scattered = Ray::new(hit.point, random_vector_in_unit_sphere()).with_time(ray.time());
         let attenuation = self.albedo.color_at(hit.u, hit.v, hit.point);
         Some((scattered, attenuation))
     }
