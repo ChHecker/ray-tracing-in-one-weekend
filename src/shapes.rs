@@ -165,7 +165,7 @@ impl<M: Material> Sphere<M> {
     fn get_surface_coordinates(&self, point: Vector3<f32>) -> (f32, f32) {
         let phi = point.z.atan2(point.x);
         let theta = point.y.asin();
-        let u = 1.0 - (phi + PI) / (2.0 * PI);
+        let u = 1. - (phi + PI) / (2. * PI);
         let v = (theta + FRAC_PI_2) / PI;
         (u, v)
     }
@@ -409,10 +409,10 @@ impl Plane {
     }
 }
 
-/// A flat rectangle along the x y plane.
+/// A flat rectangle along one of the axis-aligned planes.
 ///
 /// # Fields
-/// - `orientation`: Along which [`Plane`] the [`Rectangle`] should be oriented.
+/// - `orientation`: Along which [`Plane`] it should be oriented.
 /// - `center`: Its center.
 /// - `width`: Its width, defined along the first of the two axes of the [`Plane`].
 /// - `height`: Its height, defined along the second of the two axes of the [`Plane`].
@@ -567,7 +567,7 @@ impl<M: Material + Clone + 'static> Movable for Rectangle<M> {
     }
 }
 
-/// A axis-aligned parallelepipied (3D rectangle).
+/// A axis-aligned cuboid (3D rectangle).
 ///
 /// # Fields:
 /// - `center`: Its [`Offset`].
@@ -576,7 +576,7 @@ impl<M: Material + Clone + 'static> Movable for Rectangle<M> {
 /// - `depth`: Its depth (in z direction).
 /// - `material`: Its material.
 #[derive(Clone, Debug)]
-pub struct Parallelepiped<M: Material> {
+pub struct Cuboid<M: Material> {
     center: Offset,
     width: f32,
     height: f32,
@@ -585,7 +585,7 @@ pub struct Parallelepiped<M: Material> {
     material: M,
 }
 
-impl<M: Material + Clone + 'static> Parallelepiped<M> {
+impl<M: Material + Clone + 'static> Cuboid<M> {
     pub fn new(center: Vector3<f32>, width: f32, height: f32, depth: f32, material: M) -> Self {
         let mut rectangles = HittableList::new();
 
@@ -638,7 +638,7 @@ impl<M: Material + Clone + 'static> Parallelepiped<M> {
     }
 }
 
-impl<M: Material + Clone + 'static> Hittable for Parallelepiped<M> {
+impl<M: Material + Clone + 'static> Hittable for Cuboid<M> {
     fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         self.rectangles.hit(ray, t_min, t_max)
     }
@@ -655,7 +655,7 @@ impl<M: Material + Clone + 'static> Hittable for Parallelepiped<M> {
     }
 }
 
-impl<M: Material + Clone + 'static> Movable for Parallelepiped<M> {
+impl<M: Material + Clone + 'static> Movable for Cuboid<M> {
     fn with_rotation(mut self, rotation: Rotation3<f32>) -> Self {
         self.center = self.center.with_rotation(rotation);
         self

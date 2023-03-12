@@ -329,9 +329,9 @@ fn cornell(
     // let light_rect = Rectangle::xz(vector![0., 400., 0.], 100., 100., light);
     let light_sphere = Sphere::new(vector![0., 0., 0.], 20., light);
 
-    let box1 = Parallelepiped::new(vector![0., -125., -50.], 80., 150., 80., white.clone())
+    let box1 = Cuboid::new(vector![0., -125., -50.], 80., 150., 80., white.clone())
         .with_rotation(Rotation3::new((15f32).to_radians() * Vector3::y()));
-    let box2 = Parallelepiped::new(vector![150., -50., 150.], 80., 300., 80., white.clone())
+    let box2 = Cuboid::new(vector![150., -50., 150.], 80., 300., 80., white.clone())
         .with_rotation(Rotation3::new((-18f32).to_radians() * Vector3::y()));
 
     world.push(floor);

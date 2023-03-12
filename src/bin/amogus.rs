@@ -64,7 +64,7 @@ fn main() {
 
     let mut raytracer = Raytracer::new(
         camera,
-        0.1 * color![0.529, 0.808, 0.922],
+        color![0.529, 0.808, 0.922],
         image_width,
         image_height,
         samples_per_pixel,
