@@ -20,10 +20,7 @@ pub trait HittableClone {
     fn box_clone(&self) -> HittableBox;
 }
 
-impl<T> HittableClone for T
-where
-    T: 'static + Hittable + Clone,
-{
+impl<T: Hittable + Clone + 'static> HittableClone for T {
     fn box_clone(&self) -> HittableBox {
         Box::new(self.clone())
     }
