@@ -9,7 +9,7 @@ use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
 use crate::vec3::{
-    near_zero, random_unit_vector, random_vector, random_vector_in_unit_sphere, reflect, refract,
+    near_zero, random_unit_vector_in_unit_sphere, random_vector_in_unit_sphere, reflect, refract,
 };
 use crate::*;
 
@@ -48,7 +48,7 @@ impl Lambertian<SolidColor> {
 
 impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
-        let mut scatter_direction = hit.normal + random_unit_vector();
+        let mut scatter_direction = hit.normal + random_unit_vector_in_unit_sphere();
 
         if near_zero(&scatter_direction) {
             scatter_direction = hit.normal;
