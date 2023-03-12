@@ -10,6 +10,7 @@ use rand::Rng;
 
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
+use crate::shapes::Offset;
 use crate::*;
 
 type HittableBox = Box<dyn Hittable>;
@@ -39,24 +40,48 @@ impl Clone for HittableBox {
 /// All objects that can be hit by [`Ray`]s and encompassed by [axis-aligned bounding boxes](Aabb) should implement [`Hittable`]. This not only includes shapes, but also more abstract objects like [lists of shapes](HittableList).
 /// `Send + Sync` is necessary for multithreading.
 pub trait Hittable: Debug + HittableClone + Send + Sync {
-    /// Check whether a [Ray] hits the object inside a allowed parameter range.
+    /// Check whether a [Ray] hits the object at the origin inside an allowed parameter range.
     ///
-    /// If the [Ray] does not hit the object, returns `None`. If it does, all necessary information are saved in the return [`HitRecord`].
+    /// **Do not manually use this function! This should only be overwritten for new [`shapes`], but not manually used! Use [`hit`](Hittable::hit) instead!**
     ///
     /// # Parameters
     /// - `ray`: [Ray] to check
     /// - `t_min`: Minimum allowed parameter of the ray (excluded).
     /// - `t_max`: Maximum allowed parameter of the ray (excluded).
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 
-    /// Return the [`Aabb`] that completely encompasses the object.
+    /// Return the [`Aabb`] that completely encompasses the object at the origin.
+    ///
+    /// **Do not manually use this function! This should only be overwritten for new [`shapes`], but not manually used! Use [`bounding_box`](Hittable::bounding_box) instead!**
+    ///
+    /// # Parameters
+    /// - `time0`: Start of the interval in which the object should be fully encompassed. Set to `0.` if no time resolution is desired.
+    /// - `time1`: End of the interval in which the object should be fully encompassed. Set to `0.` if no time resolution is desired.
+    fn bounding_box_origin(&self, time0: f32, time1: f32) -> Option<Aabb>;
+
+    /// Check whether a [Ray] hits the object inside an allowed parameter range.
+    ///
+    /// If the [Ray] does not hit the object, returns `None`. If it does, all necessary information are saved in the return [`HitRecord`].
+    /// This function calls [`Offset::hit`], which in turn calls [`Hittable::hit_origin`] with an offset [`Ray`].
+    ///
+    /// # Parameters
+    /// - `ray`: [Ray] to check
+    /// - `t_min`: Minimum allowed parameter of the ray (excluded).
+    /// - `t_max`: Maximum allowed parameter of the ray (excluded).
+    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        self.center().hit(self, ray, t_min, t_max)
+    }
+
+    /// Return the [`Aabb`] that completely encompasses the object at the origin.
     ///
     /// This allows for a more efficient search for hits via [bounding volume hierarchies](Bvh).
     ///
     /// # Parameters
     /// - `time0`: Start of the interval in which the object should be fully encompassed. Set to `0.` if no time resolution is desired.
     /// - `time1`: End of the interval in which the object should be fully encompassed. Set to `0.` if no time resolution is desired.
-    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb>;
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
+        self.center().bounding_box(self, time0, time1)
+    }
 
     /// Compare two [`Hittable`]s by the value of the `minimum` of its [`Aabb`] on an axis.
     ///
@@ -65,7 +90,7 @@ pub trait Hittable: Debug + HittableClone + Send + Sync {
     /// # Parameters
     /// - `other`: Other [Hittable] to compare to.
     /// - `axis`: Axis along which the minima should be compared.
-    fn cmp_box(&self, other: &dyn Hittable, axis: u8) -> Ordering {
+    fn cmp_box(&self, other: &dyn Hittable, axis: usize) -> Ordering {
         let box1 = self.bounding_box(0., 0.).unwrap();
         let box2 = other.bounding_box(0., 0.).unwrap();
 
@@ -73,6 +98,9 @@ pub trait Hittable: Debug + HittableClone + Send + Sync {
             .partial_cmp(&box2.minimum[axis])
             .expect("NaN encountered")
     }
+
+    /// Get a reference to the center ([`Offset`]) of the [`Hittable`].
+    fn center(&self) -> &Offset;
 }
 
 /// Stores a list of [`Hittable`]s.
@@ -81,6 +109,7 @@ pub trait Hittable: Debug + HittableClone + Send + Sync {
 /// - `hittables`: [Vector](Vec) of [`Arc`]s of [`Hittable`]s.
 #[derive(Clone, Default, Debug)]
 pub struct HittableList {
+    center: Offset,
     hittables: Vec<HittableBox>,
 }
 
@@ -88,6 +117,7 @@ impl HittableList {
     /// Create an empty [`HittableList`].
     pub fn new() -> Self {
         Self {
+            center: Offset::new(vector![0., 0., 0.]),
             hittables: Vec::new(),
         }
     }
@@ -112,13 +142,54 @@ impl HittableList {
         self.hittables.len()
     }
 
-    pub fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    /// Remove the last [`Hittable`] and return it.
+    pub fn pop(&mut self) -> Option<HittableBox> {
+        self.hittables.pop()
+    }
+
+    /// Sort by the value of the `minimum` of the [`Aabb`]s on an axis.
+    ///
+    /// This allows creating a kind of spatial hierarchy (see [Bvh]).
+    ///
+    /// # Parameters
+    /// - `axis`: Axis along which the minima should be compared.
+    fn sort_by_box(&mut self, axis: usize) {
+        self.hittables
+            .sort_by(|a, b| Hittable::cmp_box(&**a, &**b, axis));
+    }
+
+    /// Split at `mid` and return both halves.
+    fn split_at(self, mid: usize) -> (Self, Self) {
+        let mut left = Vec::<HittableBox>::new();
+        let mut right = Vec::<HittableBox>::new();
+        for (i, hittable) in self.hittables.into_iter().enumerate() {
+            if i < mid {
+                left.push(hittable);
+            } else {
+                right.push(hittable);
+            }
+        }
+        (
+            Self {
+                hittables: left,
+                center: self.center.clone(),
+            },
+            Self {
+                hittables: right,
+                center: self.center,
+            },
+        )
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut hit_record_final: Option<HitRecord> = None;
         let mut closest_so_far = t_max;
 
         for hittable in &self.hittables {
             if let Some(hit_record) = hittable.hit(ray, t_min, closest_so_far) {
-                closest_so_far = hit_record.t();
+                closest_so_far = hit_record.t;
                 hit_record_final = Some(hit_record);
             }
         }
@@ -126,7 +197,7 @@ impl HittableList {
         hit_record_final
     }
 
-    pub fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
+    fn bounding_box_origin(&self, time0: f32, time1: f32) -> Option<Aabb> {
         if self.hittables.is_empty() {
             return None;
         }
@@ -146,34 +217,8 @@ impl HittableList {
         aabb_out
     }
 
-    /// Remove the last [`Hittable`] and return it.
-    pub fn pop(&mut self) -> Option<HittableBox> {
-        self.hittables.pop()
-    }
-
-    /// Sort by the value of the `minimum` of the [`Aabb`]s on an axis.
-    ///
-    /// This allows creating a kind of spatial hierarchy (see [Bvh]).
-    ///
-    /// # Parameters
-    /// - `axis`: Axis along which the minima should be compared.
-    fn sort_by_box(&mut self, axis: u8) {
-        self.hittables
-            .sort_by(|a, b| Hittable::cmp_box(&**a, &**b, axis));
-    }
-
-    /// Split at `mid` and return both halves.
-    fn split_at(self, mid: usize) -> (Self, Self) {
-        let mut left = Vec::<HittableBox>::new();
-        let mut right = Vec::<HittableBox>::new();
-        for (i, hittable) in self.hittables.into_iter().enumerate() {
-            if i < mid {
-                left.push(hittable);
-            } else {
-                right.push(hittable);
-            }
-        }
-        (Self { hittables: left }, Self { hittables: right })
+    fn center(&self) -> &Offset {
+        &self.center
     }
 }
 
@@ -194,12 +239,12 @@ impl Index<usize> for HittableList {
 /// - `maximum` Front top right [Point].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Aabb {
-    minimum: Point,
-    maximum: Point,
+    pub minimum: Vector3<f32>,
+    pub maximum: Vector3<f32>,
 }
 
 impl Aabb {
-    pub fn new(minimum: Point, maximum: Point) -> Self {
+    pub fn new(minimum: Vector3<f32>, maximum: Vector3<f32>) -> Self {
         Aabb { minimum, maximum }
     }
 
@@ -209,39 +254,39 @@ impl Aabb {
     /// ```
     /// # use ray_tracing_in_one_weekend::{*, hittable::*};
     /// let aabb1 = Aabb::new(
-    ///     point!(-1., -1., -1.),
-    ///     point!(0., 0., 0.),
+    ///     vector!(-1., -1., -1.),
+    ///     vector!(0., 0., 0.),
     /// );
     /// let aabb2 = Aabb::new(
-    ///     point!(0., 0., 0.),
-    ///     point!(1., 1., 1.),
+    ///     vector!(0., 0., 0.),
+    ///     vector!(1., 1., 1.),
     /// );
     /// let surrounding_aabb = Aabb::surrounding(&aabb1, &aabb2);
     /// let surrounding_aabb_reference = Aabb::new(
-    ///     point!(-1., -1., -1.),
-    ///     point!(1., 1., 1.),
+    ///     vector!(-1., -1., -1.),
+    ///     vector!(1., 1., 1.),
     /// );
     /// assert_eq!(surrounding_aabb, surrounding_aabb_reference);
     /// ```
     pub fn surrounding(&self, aabb: &Self) -> Self {
-        let minimum = point![
-            f32::min(self.minimum().x(), aabb.minimum().x()),
-            f32::min(self.minimum().y(), aabb.minimum().y()),
-            f32::min(self.minimum().z(), aabb.minimum().z()),
+        let minimum = vector![
+            f32::min(self.minimum().x, aabb.minimum().x),
+            f32::min(self.minimum().y, aabb.minimum().y),
+            f32::min(self.minimum().z, aabb.minimum().z)
         ];
-        let maximum = point![
-            f32::max(self.maximum().x(), aabb.maximum().x()),
-            f32::max(self.maximum().y(), aabb.maximum().y()),
-            f32::max(self.maximum().z(), aabb.maximum().z()),
+        let maximum = vector![
+            f32::max(self.maximum().x, aabb.maximum().x),
+            f32::max(self.maximum().y, aabb.maximum().y),
+            f32::max(self.maximum().z, aabb.maximum().z)
         ];
         Aabb { minimum, maximum }
     }
 
-    pub fn minimum(&self) -> Point {
+    pub fn minimum(&self) -> Vector3<f32> {
         self.minimum
     }
 
-    pub fn maximum(&self) -> Point {
+    pub fn maximum(&self) -> Vector3<f32> {
         self.maximum
     }
 
@@ -303,6 +348,7 @@ enum BvhNode {
 /// - `right`: Right subtree/node.
 #[derive(Clone, Debug)]
 pub(crate) struct Bvh {
+    center: Offset,
     aabb: Aabb,
     subnode: BvhNode,
 }
@@ -325,8 +371,9 @@ impl Bvh {
 
         let mut rand = rand::thread_rng();
 
+        let center = hittables.center.clone();
         let subnode: BvhNode;
-        let axis: u8 = rand.gen_range(0..=2);
+        let axis: usize = rand.gen_range(0..=2);
 
         if hittables.len() == 1 {
             let elem = hittables.pop().unwrap();
@@ -362,7 +409,11 @@ impl Bvh {
             ),
         };
 
-        Ok(Self { aabb, subnode })
+        Ok(Self {
+            center,
+            aabb,
+            subnode,
+        })
     }
 
     pub fn check_hittable_list(hittables: &HittableList) -> Result<(), BoundingBoxError> {
@@ -381,7 +432,7 @@ impl Bvh {
 }
 
 impl Hittable for Bvh {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         if !self.aabb.hit(ray, t_min, t_max) {
             return None;
         }
@@ -391,7 +442,7 @@ impl Hittable for Bvh {
             BvhNode::Two(left, right) => {
                 let hit_left = left.hit(ray, t_min, t_max);
                 let t_max = match &hit_left {
-                    Some(hit_record) => hit_record.t(),
+                    Some(hit_record) => hit_record.t,
                     None => t_max,
                 };
                 let hit_right = right.hit(ray, t_min, t_max);
@@ -401,8 +452,12 @@ impl Hittable for Bvh {
         }
     }
 
-    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
+    fn bounding_box_origin(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(self.aabb)
+    }
+
+    fn center(&self) -> &Offset {
+        &self.center
     }
 }
 
@@ -426,27 +481,31 @@ mod test {
         let black = SolidColor::new(color![1., 1., 1.]);
         let black_lambertian = Lambertian::new(black);
         let left = Box::new(Sphere::new(
-            point![-2., 0., -1.],
+            vector![-2., 0., -1.],
             1.,
             black_lambertian.clone(),
         ));
-        let right = Box::new(Sphere::new(point![2., 0., -1.], 1., black_lambertian));
+        let right = Box::new(Sphere::new(vector![2., 0., -1.], 1., black_lambertian));
         let aabb = Aabb::surrounding(
             &left.bounding_box(0., 0.).unwrap(),
             &right.bounding_box(0., 0.).unwrap(),
         );
         let subnode = BvhNode::Two(left, right);
-        let bvh = Bvh { aabb, subnode };
+        let bvh = Bvh {
+            aabb,
+            subnode,
+            center: Offset::default(),
+        };
 
-        let ray_hit_left = Ray::new(point![0., 0., 0.], point![-2., 0., -1.]);
+        let ray_hit_left = Ray::new(vector![0., 0., 0.], vector![-2., 0., -1.]);
         let hit_left = bvh.hit(ray_hit_left, 0., f32::INFINITY);
         assert_eq!(hit_left.is_some(), true);
 
-        let ray_hit_right = Ray::new(point![0., 0., 0.], point![2., 0., -1.]);
+        let ray_hit_right = Ray::new(vector![0., 0., 0.], vector![2., 0., -1.]);
         let hit_right = bvh.hit(ray_hit_right, 0., f32::INFINITY);
         assert_eq!(hit_right.is_some(), true);
 
-        let ray_no_hit = Ray::new(point![0., 0., 0.], point![0., 0., 1.]);
+        let ray_no_hit = Ray::new(vector![0., 0., 0.], vector![0., 0., 1.]);
         let no_hit = bvh.hit(ray_no_hit, 0., f32::INFINITY);
         assert_eq!(no_hit.is_some(), false);
     }

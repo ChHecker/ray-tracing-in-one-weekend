@@ -200,7 +200,7 @@ impl Raytracer {
         match world_option {
             HittableListOptions::Bvh(world) => {
                 if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
-                    let emitted = hit.material().emit(hit.u(), hit.v(), hit.point());
+                    let emitted = hit.material().emit(hit.u, hit.v, hit.point);
                     if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
                         return emitted
                             + attenuation
@@ -216,7 +216,7 @@ impl Raytracer {
             }
             HittableListOptions::HittableList(world) => {
                 if let Some(hit) = world.hit(ray, 0.001, f32::INFINITY) {
-                    let emitted = hit.material().emit(hit.u(), hit.v(), hit.point());
+                    let emitted = hit.material().emit(hit.u, hit.v, hit.point);
                     if let Some((scattered, attenuation)) = hit.material().scatter(ray, hit) {
                         return emitted
                             + attenuation

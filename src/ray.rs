@@ -1,6 +1,6 @@
 //! A simple ray of light.
 
-use crate::point::Point;
+use nalgebra::Vector3;
 
 /// A ray starting at `origin` at `time` pointing in `direction`.
 ///
@@ -10,14 +10,14 @@ use crate::point::Point;
 /// - `time`: time.
 #[derive(Clone, Copy)]
 pub struct Ray {
-    origin: Point,
-    direction: Point,
+    origin: Vector3<f32>,
+    direction: Vector3<f32>,
     time: f32,
 }
 
 impl Ray {
     /// Create a ray without a time.
-    pub fn new(origin: Point, direction: Point) -> Self {
+    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Self {
         Self {
             origin,
             direction,
@@ -31,11 +31,11 @@ impl Ray {
         self
     }
 
-    pub fn origin(&self) -> Point {
+    pub fn origin(&self) -> Vector3<f32> {
         self.origin
     }
 
-    pub fn direction(&self) -> Point {
+    pub fn direction(&self) -> Vector3<f32> {
         self.direction
     }
 
@@ -44,12 +44,12 @@ impl Ray {
     /// # Examples
     /// ```
     /// # use ray_tracing_in_one_weekend::{*, ray::Ray};
-    /// let origin = point![1., 0., 0.];
-    /// let direction = point![0., 1., 0.];
+    /// let origin = vector![1., 0., 0.];
+    /// let direction = vector![0., 1., 0.];
     /// let ray = Ray::new(origin, direction);
-    /// assert_eq!(ray.at(1.), point![1., 1., 0.]);
+    /// assert_eq!(ray.at(1.), vector![1., 1., 0.]);
     /// ```
-    pub fn at(&self, t: f32) -> Point {
+    pub fn at(&self, t: f32) -> Vector3<f32> {
         self.origin + t * self.direction
     }
 

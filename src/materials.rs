@@ -8,6 +8,7 @@ use crate::color::BLACK;
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
+use crate::vec3::{near_zero, random_in_unit_sphere, random_unit_vector, reflect, refract};
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.
@@ -18,7 +19,7 @@ pub trait Material: Debug + Send + Sync {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)>;
 
     /// Checks if and what color light is emitted at a certain point.
-    fn emit(&self, u: f32, v: f32, point: Point) -> Color;
+    fn emit(&self, u: f32, v: f32, point: Vector3<f32>) -> Color;
 }
 
 /// A realistic perfectly diffusive material.
@@ -45,20 +46,17 @@ impl Lambertian<SolidColor> {
 
 impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
-        let mut scatter_direction = hit.normal() + Point::random_unit_vector();
+        let mut scatter_direction = hit.normal + random_unit_vector();
 
-        if scatter_direction.near_zero() {
-            scatter_direction = hit.normal();
+        if near_zero(&scatter_direction) {
+            scatter_direction = hit.normal;
         }
 
-        let scattered = Ray::new(hit.point(), scatter_direction).with_time(ray.time());
-        Some((
-            scattered,
-            self.albedo.color_at(hit.u(), hit.v(), hit.point()),
-        ))
+        let scattered = Ray::new(hit.point, scatter_direction).with_time(ray.time());
+        Some((scattered, self.albedo.color_at(hit.u, hit.v, hit.point)))
     }
 
-    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Vector3<f32>) -> Color {
         BLACK
     }
 }
@@ -86,22 +84,16 @@ impl Metal<SolidColor> {
 
 impl<T: Texture> Material for Metal<T> {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
-        let reflected = ray.direction().unit_vector().reflect(&hit.normal());
-        let scattered = Ray::new(
-            hit.point(),
-            reflected + self.fuzz * Point::random_in_unit_sphere(),
-        )
-        .with_time(ray.time());
-        if scattered.direction().dot(&hit.normal()) > 0. {
-            return Some((
-                scattered,
-                self.albedo.color_at(hit.u(), hit.v(), hit.point()),
-            ));
+        let reflected = reflect(&ray.direction().normalize(), &hit.normal);
+        let scattered = Ray::new(hit.point, reflected + self.fuzz * random_in_unit_sphere())
+            .with_time(ray.time());
+        if scattered.direction().dot(&hit.normal) > 0. {
+            return Some((scattered, self.albedo.color_at(hit.u, hit.v, hit.point)));
         }
         None
     }
 
-    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Vector3<f32>) -> Color {
         BLACK
     }
 }
@@ -130,29 +122,29 @@ impl Material for Dielectric {
     fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
         let mut rng = rand::thread_rng();
 
-        let refraction_ratio = if hit.front_face() {
+        let refraction_ratio = if hit.front_face {
             1. / self.index_of_refraction
         } else {
             self.index_of_refraction
         };
 
-        let unit_direction = ray.direction().unit_vector();
-        let cos_theta = f32::min(-unit_direction.dot(&hit.normal()), 1.);
+        let unit_direction = ray.direction().normalize();
+        let cos_theta = f32::min(-unit_direction.dot(&hit.normal), 1.);
         let sin_theta = (1. - cos_theta.powi(2)).sqrt();
 
         let cannot_refrect = refraction_ratio * sin_theta > 1.;
         let direction =
             if cannot_refrect || Dielectric::reflectance(cos_theta, refraction_ratio) > rng.gen() {
-                unit_direction.reflect(&hit.normal())
+                reflect(&unit_direction, &hit.normal)
             } else {
-                unit_direction.refract(&hit.normal(), refraction_ratio)
+                refract(&unit_direction, &hit.normal, refraction_ratio)
             };
 
-        let scattered = Ray::new(hit.point(), direction).with_time(ray.time());
+        let scattered = Ray::new(hit.point, direction).with_time(ray.time());
         Some((scattered, color![1., 1., 1.]))
     }
 
-    fn emit(&self, _u: f32, _v: f32, _hit_point: Point) -> Color {
+    fn emit(&self, _u: f32, _v: f32, _hit_point: Vector3<f32>) -> Color {
         BLACK
     }
 }
@@ -183,7 +175,7 @@ impl<T: Texture> Material for DiffusiveLight<T> {
         None
     }
 
-    fn emit(&self, u: f32, v: f32, hit_point: Point) -> Color {
+    fn emit(&self, u: f32, v: f32, hit_point: Vector3<f32>) -> Color {
         self.texture.color_at(u, v, hit_point)
     }
 }
