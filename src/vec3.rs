@@ -27,7 +27,6 @@ pub fn reflect(vec: &Vector3<f32>, normal: &Vector3<f32>) -> Vector3<f32> {
 /// # use ray_tracing_in_one_weekend::{*, vec3::*};
 /// let v = vector![1., 2., 3.].normalize();
 /// let normal = v;
-/// eprintln!("{:?}", refract(&v, &normal, 1.));
 /// assert!((refract(&v, &normal, 1.) + normal).norm() < 0.01);
 /// ```
 pub fn refract(vec: &Vector3<f32>, normal: &Vector3<f32>, etai_over_etat: f32) -> Vector3<f32> {
