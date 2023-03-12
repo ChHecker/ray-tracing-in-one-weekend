@@ -4,6 +4,7 @@ use std::f32::consts::{FRAC_PI_2, PI};
 use std::fmt::Debug;
 
 use nalgebra::Rotation3;
+use rand::Rng;
 
 use crate::hitrecord::HitRecord;
 use crate::hittable::Aabb;
@@ -165,10 +166,7 @@ impl<M: Material> Sphere<M> {
     }
 }
 
-impl<M> Hittable for Sphere<M>
-where
-    M: Material + Clone + 'static,
-{
+impl<M: Material + Clone + 'static> Hittable for Sphere<M> {
     fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.origin();
         let a = ray.direction().norm_squared();
@@ -282,10 +280,7 @@ impl<M: Material> Cylinder<M> {
     }
 }
 
-impl<M> Hittable for Cylinder<M>
-where
-    M: Material + Clone + 'static,
-{
+impl<M: Material + Clone + 'static> Hittable for Cylinder<M> {
     fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = vector![ray.origin().x, 0., ray.origin().z];
         let a = ray.direction().x.powi(2) + ray.direction().z.powi(2);
@@ -568,6 +563,13 @@ impl<M: Material + Clone + 'static> Movable for Rectangle<M> {
 }
 
 /// A axis-aligned parallelepipied (3D rectangle).
+///
+/// # Fields:
+/// - `center`: Its [`Offset`].
+/// - `width`: Its width (in x direction).
+/// - `height`: Its height (in y direction).
+/// - `depth`: Its depth (in z direction).
+/// - `material`: Its material.
 #[derive(Clone, Debug)]
 pub struct Parallelepiped<M: Material> {
     center: Offset,
@@ -657,5 +659,89 @@ impl<M: Material + Clone + 'static> Movable for Parallelepiped<M> {
     fn moving(mut self, offset_end: Vector3<f32>, time_start: f32, time_end: f32) -> Self {
         self.center = self.center.moving(offset_end, time_start, time_end);
         self
+    }
+}
+
+/// A medium of constant optical density.
+#[derive(Clone, Debug)]
+pub struct ConstantMedium<H: Hittable, M: Material> {
+    boundary: H,
+    material: M,
+    negative_inverse_density: f32,
+}
+
+impl<H: Hittable, M: Material> ConstantMedium<H, M> {
+    pub fn new(boundary: H, material: M, density: f32) -> Self {
+        Self {
+            boundary,
+            material,
+            negative_inverse_density: -1. / density,
+        }
+    }
+
+    pub fn material(&self) -> &M {
+        &self.material
+    }
+}
+
+impl<H, M> Hittable for ConstantMedium<H, M>
+where
+    H: Hittable + Clone + 'static,
+    M: Material + Clone + 'static,
+{
+    fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+        let mut rng = rand::thread_rng();
+
+        let mut hit1 = match self.boundary.hit(ray, -f32::INFINITY, f32::INFINITY) {
+            Some(hit) => hit,
+            None => return None,
+        };
+        let mut hit2 = match self.boundary.hit(ray, hit1.t + 0.0001, f32::INFINITY) {
+            Some(hit) => hit,
+            None => return None,
+        };
+
+        if hit1.t < t_min {
+            hit1.t = t_min
+        };
+        if hit2.t > t_max {
+            hit2.t = t_max
+        };
+
+        if hit1.t > hit2.t {
+            return None;
+        }
+
+        if hit1.t < 0. {
+            hit1.t = 0.
+        }
+
+        let ray_length = ray.direction().norm();
+        let distance_inside_boundary = (hit2.t - hit1.t) * ray_length;
+        let hit_distance = self.negative_inverse_density * rng.gen::<f32>().ln();
+
+        if hit_distance > distance_inside_boundary {
+            return None;
+        }
+
+        let t = hit1.t + hit_distance / ray_length;
+        let point = ray.at(t);
+        Some(HitRecord::new(
+            point,
+            0.,
+            0.,
+            Vector3::zeros(),
+            t,
+            true,
+            &self.material,
+        ))
+    }
+
+    fn bounding_box_origin(&self, time0: f32, time1: f32) -> Option<Aabb> {
+        self.boundary.bounding_box_origin(time0, time1)
+    }
+
+    fn center(&self) -> &Offset {
+        self.boundary.center()
     }
 }
