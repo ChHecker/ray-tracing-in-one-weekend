@@ -8,7 +8,7 @@ use ray_tracing_in_one_weekend::*;
 fn criterion_benchmark(c: &mut Criterion) {
     let mut raytracer = Raytracer::new(Camera::default(), BLACK, 160, 90, 10, 10);
     let sphere = Sphere::new(
-        point![0., 1., -1.],
+        vector![0., 1., -1.],
         1.,
         Lambertian::solid_color(color![1., 1., 1.]),
     );
