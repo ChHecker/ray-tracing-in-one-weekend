@@ -179,3 +179,34 @@ impl<T: Texture> Material for DiffusiveLight<T> {
         self.texture.color_at(u, v, hit_point)
     }
 }
+
+/// An isotropically scattering material.
+#[derive(Clone, Debug)]
+pub struct Isotropic<T: Texture> {
+    albedo: T,
+}
+
+impl<T: Texture> Isotropic<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo }
+    }
+}
+
+impl Isotropic<SolidColor> {
+    pub fn solid_color(albedo: Color) -> Self {
+        let albedo = SolidColor::new(albedo);
+        Self { albedo }
+    }
+}
+
+impl<T: Texture> Material for Isotropic<T> {
+    fn scatter(&self, ray: Ray, hit: HitRecord) -> Option<(Ray, Color)> {
+        let scattered = Ray::new(hit.point, random_in_unit_sphere()).with_time(ray.time());
+        let attenuation = self.albedo.color_at(hit.u, hit.v, hit.point);
+        Some((scattered, attenuation))
+    }
+
+    fn emit(&self, _u: f32, _v: f32, _point: Vector3<f32>) -> Color {
+        BLACK
+    }
+}
