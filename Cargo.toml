@@ -2,7 +2,7 @@
 name = "ray-tracing-in-one-weekend"
 authors = ["Christopher Hecker"]
 description = "Implementation of Ray Tracing in One Weekend by Peter Shirley"
-version = "0.2.6"
+version = "0.2.8"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
