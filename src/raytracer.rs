@@ -47,7 +47,7 @@ impl Raytracer {
         max_depth: u16,
     ) -> Self {
         Self {
-            world: HittableList::new(),
+            world: HittableList::default(),
             camera,
             background,
             image_width,
@@ -110,8 +110,14 @@ impl Raytracer {
 
     fn render_multithreaded(self) -> Vec<Color> {
         let world = match Bvh::check_hittable_list(&self.world) {
-            Ok(()) => HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH")),
-            Err(BoundingBoxError) => HittableListOptions::HittableList(self.world),
+            Ok(()) => {
+                eprintln!("Using BVH.");
+                HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH"))
+            }
+            Err(BoundingBoxError) => {
+                eprintln!("BVH not available. Falling back to linear search.");
+                HittableListOptions::HittableList(self.world)
+            }
         };
 
         let mut colors =
