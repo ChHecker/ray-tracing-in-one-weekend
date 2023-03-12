@@ -249,8 +249,8 @@ fn light(
 
     let mut raytracer = Raytracer::new(
         camera,
-        // BLACK,
-        color![0., 0., 0.02],
+        BLACK,
+        // color![0.1, 0.1, 0.15],
         image_width,
         image_height,
         samples_per_pixel,
@@ -274,10 +274,15 @@ fn light(
     let sphere2 = Sphere::new(vector![-2., -2., 0.], 2., green.clone());
     world.push(sphere2);
 
-    let rectangle1 = Rectangle::xy(vector![-2., 1.5, 0.], 3., 3., light);
-    world.push(rectangle1);
+    let cylinder = Cylinder::new(vector![-2., 1.5, 0.], 0.3, 3., light);
+    world.push(cylinder);
+    // let rectangle1 = Rectangle::xy(vector![-2., 1.5, 0.], 3., 3., light);
+    // world.push(rectangle1);
     let rectangle2 = Rectangle::xy(vector![-2., 1.5, -4.], 100., 100., red);
     world.push(rectangle2);
+    let rectangle3 = Rectangle::xy(vector![-2., 1.5, 5.], 3., 3., green)
+        .with_rotation(Rotation3::new(Vector3::y()));
+    world.push(rectangle3);
 
     raytracer
 }
@@ -331,7 +336,8 @@ fn cornell(
 
     let box1 = Cuboid::new(vector![0., -125., -50.], 80., 150., 80., white.clone())
         .with_rotation(Rotation3::new((15f32).to_radians() * Vector3::y()));
-    let box2 = Cuboid::new(vector![150., -50., 150.], 80., 300., 80., white.clone())
+    let dustbox1 = ConstantMedium::new(box1, Isotropic::solid_color(WHITE), 1.);
+    let box2 = Cuboid::new(vector![100., -100., 100.], 80., 200., 80., white.clone())
         .with_rotation(Rotation3::new((-18f32).to_radians() * Vector3::y()));
 
     world.push(floor);
@@ -340,7 +346,7 @@ fn cornell(
     world.push(left_wall);
     world.push(right_wall);
     world.push(light_sphere);
-    world.push(box1);
+    world.push(dustbox1);
     world.push(box2);
 
     raytracer
@@ -362,7 +368,7 @@ fn main() {
     let image_width: u16 = 800;
     let image_height = (image_width as f32 / aspect_ratio) as u16;
     let samples_per_pixel: u16 = 200;
-    let max_depth = 100;
+    let max_depth = 20;
 
     let path: &Path;
 
