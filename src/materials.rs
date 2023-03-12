@@ -158,24 +158,24 @@ impl Material for Dielectric {
 ///
 /// Light emission does not work correctly yet. //TODO
 #[derive(Clone, Debug)]
-pub struct DiffusiveLight<T: Texture> {
+pub struct DiffuseLight<T: Texture> {
     texture: T,
 }
 
-impl<T: Texture> DiffusiveLight<T> {
+impl<T: Texture> DiffuseLight<T> {
     pub fn new(texture: T) -> Self {
         Self { texture }
     }
 }
 
-impl DiffusiveLight<SolidColor> {
+impl DiffuseLight<SolidColor> {
     pub fn solid_color(color: Color) -> Self {
         let texture = SolidColor::new(color);
         Self { texture }
     }
 }
 
-impl<T: Texture> Material for DiffusiveLight<T> {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(&self, _ray: Ray, _hit: HitRecord) -> Option<(Ray, Color)> {
         None
     }
