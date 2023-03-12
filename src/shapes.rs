@@ -8,8 +8,9 @@ use rand::Rng;
 
 use crate::hitrecord::HitRecord;
 use crate::hittable::Aabb;
-use crate::materials::Material;
+use crate::materials::{Isotropic, Material};
 use crate::ray::Ray;
+use crate::textures::{SolidColor, Texture};
 use crate::*;
 
 /// Marks an object to support movement and rotation via [`Offset`].
@@ -587,7 +588,7 @@ pub struct Cuboid<M: Material> {
 
 impl<M: Material + Clone + 'static> Cuboid<M> {
     pub fn new(center: Vector3<f32>, width: f32, height: f32, depth: f32, material: M) -> Self {
-        let mut rectangles = HittableList::new();
+        let mut rectangles = HittableList::default();
 
         let bottom = Rectangle::xz(
             -vector![0., height / 2., 0.],
@@ -669,30 +670,36 @@ impl<M: Material + Clone + 'static> Movable for Cuboid<M> {
 
 /// A medium of constant optical density.
 #[derive(Clone, Debug)]
-pub struct ConstantMedium<H: Hittable, M: Material> {
+pub struct ConstantMedium<H: Hittable, T: Texture> {
     boundary: H,
-    material: M,
+    phase_function: Isotropic<T>,
     negative_inverse_density: f32,
 }
 
-impl<H: Hittable, M: Material> ConstantMedium<H, M> {
-    pub fn new(boundary: H, material: M, density: f32) -> Self {
+impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
+    pub fn new(boundary: H, texture: T, density: f32) -> Self {
         Self {
             boundary,
-            material,
+            phase_function: Isotropic::new(texture),
             negative_inverse_density: -1. / density,
         }
     }
+}
 
-    pub fn material(&self) -> &M {
-        &self.material
+impl<H: Hittable> ConstantMedium<H, SolidColor> {
+    pub fn solid_color(boundary: H, color: Color, density: f32) -> Self {
+        Self {
+            boundary,
+            phase_function: Isotropic::solid_color(color),
+            negative_inverse_density: -1. / density,
+        }
     }
 }
 
-impl<H, M> Hittable for ConstantMedium<H, M>
+impl<H, T> Hittable for ConstantMedium<H, T>
 where
     H: Hittable + Clone + 'static,
-    M: Material + Clone + 'static,
+    T: Texture + Clone + 'static,
 {
     fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut rng = rand::thread_rng();
@@ -713,7 +720,7 @@ where
             hit2.t = t_max
         };
 
-        if hit1.t > hit2.t {
+        if hit1.t >= hit2.t {
             return None;
         }
 
@@ -738,7 +745,7 @@ where
             Vector3::zeros(),
             t,
             true,
-            &self.material,
+            &self.phase_function,
         ))
     }
 
