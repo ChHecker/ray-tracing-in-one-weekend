@@ -3,7 +3,7 @@
 use rand::Rng;
 
 use crate::ray::Ray;
-use crate::vec3::random_in_unit_disk;
+use crate::vec3::random_vector_in_unit_disk;
 use crate::*;
 
 /// A struct for a camera.
@@ -88,7 +88,7 @@ impl Camera {
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         let mut rng = rand::thread_rng();
 
-        let random_disk = self.lens_radius * random_in_unit_disk();
+        let random_disk = self.lens_radius * random_vector_in_unit_disk();
         let offset = self.u * random_disk.x + self.v * random_disk.y;
 
         let ray = Ray::new(

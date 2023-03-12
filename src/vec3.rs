@@ -51,13 +51,13 @@ pub fn near_zero(vec: &Vector3<f32>) -> bool {
 }
 
 /// Creates a random vector with each element between 0 and 1.
-pub fn random() -> Vector3<f32> {
+pub fn random_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     Vector3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
 }
 
 /// Creates a random vector with each element in a range.
-pub fn random_in_range(min: f32, max: f32) -> Vector3<f32> {
+pub fn random_vector_in_range(min: f32, max: f32) -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     Vector3::new(
         min + rng.gen::<f32>() * (max - min),
@@ -66,7 +66,7 @@ pub fn random_in_range(min: f32, max: f32) -> Vector3<f32> {
     )
 }
 
-pub fn random_in_unit_sphere() -> Vector3<f32> {
+pub fn random_vector_in_unit_sphere() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     loop {
         let rand = Vector3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
@@ -77,18 +77,18 @@ pub fn random_in_unit_sphere() -> Vector3<f32> {
 }
 
 pub fn random_unit_vector() -> Vector3<f32> {
-    random_in_unit_sphere().normalize()
+    random_vector_in_unit_sphere().normalize()
 }
 
-pub fn random_in_hemisphere(normal: &Vector3<f32>) -> Vector3<f32> {
-    let rand = random_in_unit_sphere();
+pub fn random_vector_in_hemisphere(normal: &Vector3<f32>) -> Vector3<f32> {
+    let rand = random_vector_in_unit_sphere();
     if rand.dot(normal) > 0. {
         return rand;
     }
     -rand
 }
 
-pub fn random_in_unit_disk() -> Vector3<f32> {
+pub fn random_vector_in_unit_disk() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
     loop {
         let rand = Vector3::new(-1. + rng.gen::<f32>() * 2., -1. + rng.gen::<f32>() * 2., 0.);

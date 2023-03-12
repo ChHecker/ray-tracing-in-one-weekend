@@ -1,7 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
-use crate::vec3::random_in_range;
+use crate::vec3::random_vector_in_range;
 use crate::*;
 
 const POINT_COUNT: usize = 256;
@@ -21,7 +21,7 @@ impl Perlin {
 
         let mut random_points = [vector![0., 0., 0.]; POINT_COUNT];
         for i in &mut random_points {
-            *i = random_in_range(-1., 1.).normalize();
+            *i = random_vector_in_range(-1., 1.).normalize();
         }
 
         let permutation_x = Perlin::generate_permutation(&mut rng);
