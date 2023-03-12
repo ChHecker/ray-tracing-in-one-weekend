@@ -32,20 +32,20 @@ struct Moving {
 #[derive(Clone, Default, Debug)]
 pub struct Offset {
     offset_start: Vector3<f32>,
-    rotation: Rotation3<f32>,
+    rotation: Option<Rotation3<f32>>,
     moving: Option<Moving>,
 }
 impl Offset {
     pub fn new(offset: Vector3<f32>) -> Self {
         Self {
             offset_start: offset,
-            rotation: Rotation3::identity(),
+            rotation: None,
             moving: None,
         }
     }
 
     pub fn with_rotation(mut self, rotation: Rotation3<f32>) -> Self {
-        self.rotation = rotation;
+        self.rotation = Some(rotation);
         self
     }
 
@@ -77,11 +77,12 @@ impl Offset {
         t_max: f32,
     ) -> Option<HitRecord> {
         // Rotation
-        let rotated_ray = Ray::new(
-            self.rotation * ray.origin(),
-            self.rotation * ray.direction(),
-        )
-        .with_time(ray.time());
+        let rotated_ray = match self.rotation {
+            Some(rotation) => {
+                Ray::new(rotation * ray.origin(), rotation * ray.direction()).with_time(ray.time())
+            }
+            None => ray,
+        };
 
         // Translation
         let offset_ray = Ray::new(
@@ -94,8 +95,10 @@ impl Offset {
 
         if let Some(hit_record) = &mut hit_record_option {
             hit_record.point += self.offset(ray.time());
-            hit_record.point = self.rotation.inverse() * hit_record.point;
-            hit_record.normal = self.rotation.inverse() * hit_record.normal;
+            if let Some(rotation) = self.rotation {
+                hit_record.point = rotation.inverse() * hit_record.point;
+                hit_record.normal = rotation.inverse() * hit_record.normal;
+            }
         }
 
         hit_record_option
@@ -109,8 +112,10 @@ impl Offset {
     ) -> Option<Aabb> {
         let mut aabb_option = hittable.bounding_box_origin(time0, time1);
         if let Some(aabb) = &mut aabb_option {
-            aabb.minimum = self.rotation * aabb.minimum;
-            aabb.maximum = self.rotation * aabb.maximum;
+            if let Some(rotation) = self.rotation {
+                aabb.minimum = rotation * aabb.minimum;
+                aabb.maximum = rotation * aabb.maximum;
+            }
             aabb.minimum += self.offset(time0);
             aabb.maximum += self.offset(time1);
         }
