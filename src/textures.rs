@@ -17,8 +17,8 @@ pub trait Texture: Debug + Send + Sync {
     /// Calculate the color of the texture.
     ///
     /// # Parameters:
-    /// - (`u`, `v`): Coordinates on the surface submanifold (lie inside \[0,1\]).
-    /// - `hit_point`: [Point] where the [`ray::Ray`] hit the texture.
+    /// - (`u`, `v`): Coordinates on the surface submanifold (lie inside \[0,1\]^2).
+    /// - `hit_point`: Point where the [`ray::Ray`] hit the texture.
     fn color_at(&self, u: f32, v: f32, hit_point: Vector3<f32>) -> Color;
 }
 
