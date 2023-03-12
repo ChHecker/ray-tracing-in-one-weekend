@@ -6,11 +6,12 @@ use std::cmp::Ordering;
 use std::fmt::{self, Debug};
 use std::ops::Index;
 
+use nalgebra::Rotation3;
 use rand::Rng;
 
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
-use crate::shapes::Offset;
+use crate::shapes::{Movable, Offset};
 use crate::*;
 
 type HittableBox = Box<dyn Hittable>;
@@ -112,9 +113,9 @@ pub struct HittableList {
 
 impl HittableList {
     /// Create an empty [`HittableList`].
-    pub fn new() -> Self {
+    pub fn new(center: Vector3<f32>) -> Self {
         Self {
-            center: Offset::new(vector![0., 0., 0.]),
+            center: Offset::new(center),
             hittables: Vec::new(),
         }
     }
@@ -216,6 +217,18 @@ impl Hittable for HittableList {
 
     fn center(&self) -> &Offset {
         &self.center
+    }
+}
+
+impl Movable for HittableList {
+    fn with_rotation(mut self, rotation: Rotation3<f32>) -> Self {
+        self.center = self.center.with_rotation(rotation);
+        self
+    }
+
+    fn moving(mut self, offset_end: Vector3<f32>, time_start: f32, time_end: f32) -> Self {
+        self.center = self.center.moving(offset_end, time_start, time_end);
+        self
     }
 }
 
