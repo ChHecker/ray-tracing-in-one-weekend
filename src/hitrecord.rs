@@ -9,7 +9,7 @@ use crate::*;
 /// This struct should be returned when a [Hittable] object is hit by a [Ray] as it contains all necessary information to deal with this.
 ///
 /// # Fields
-/// - `point`: [Point] where the hit happened.
+/// - `point`: Point where the hit happened.
 /// - (`u`, `v`): Coordinates on the surface submanifold (lie inside \[0,1\]).
 /// - `normal`: Normal vector to the surface.
 /// - `t`: Parameter of the [Ray] where the hit happened.

@@ -104,7 +104,7 @@ pub trait Hittable: Debug + HittableClone + Send + Sync {
 /// Stores a list of [`Hittable`]s.
 ///
 /// # Fields
-/// - `hittables`: [Vector](Vec) of [`Arc`]s of [`Hittable`]s.
+/// - `hittables`: [Vector](Vec) of [`Box`]s of [`Hittable`]s.
 #[derive(Clone, Default, Debug)]
 pub struct HittableList {
     center: Offset,
@@ -245,8 +245,8 @@ impl Index<usize> for HittableList {
 /// This allows for a simple way to calculate [Ray] hits more easily by first checking for [Aabb]s encompassing the objects.
 ///
 /// # Fields
-/// - `minimum` Back bottom left [Point].
-/// - `maximum` Front top right [Point].
+/// - `minimum` Back bottom left point.
+/// - `maximum` Front top right point.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Aabb {
     pub minimum: Vector3<f32>,

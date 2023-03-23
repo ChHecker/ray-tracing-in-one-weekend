@@ -125,7 +125,7 @@ impl Offset {
     }
 }
 
-/// A sphere, either [stationary](Stationary) or [moving](Moving).
+/// A sphere.
 ///
 /// # Fields
 /// - `center`: Center of the sphere.
@@ -139,7 +139,7 @@ pub struct Sphere<M: Material> {
 }
 
 impl<M: Material> Sphere<M> {
-    /// Create a new [stationary](Stationary) [`Sphere`].
+    /// Create a new stationary [`Sphere`].
     pub fn new(center: Vector3<f32>, radius: f32, material: M) -> Self {
         Self {
             center: Offset::new(center),
@@ -249,7 +249,7 @@ pub struct Cylinder<M: Material> {
 }
 
 impl<M: Material> Cylinder<M> {
-    /// Create a new [stationary](Stationary) [`Cylinder`].
+    /// Create a new stationary [`Cylinder`].
     pub fn new(center: Vector3<f32>, radius: f32, height: f32, material: M) -> Self {
         Self {
             center: Offset::new(center),

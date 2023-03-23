@@ -8,9 +8,7 @@ use crate::color::BLACK;
 use crate::hitrecord::HitRecord;
 use crate::ray::Ray;
 use crate::textures::{SolidColor, Texture};
-use crate::vec3::{
-    near_zero, random_unit_vector_in_unit_sphere, random_vector_in_unit_sphere, reflect, refract,
-};
+use crate::vec3::*;
 use crate::*;
 
 /// An abstraction for materials of [`Hittable`]s.

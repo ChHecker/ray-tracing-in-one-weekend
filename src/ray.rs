@@ -5,7 +5,7 @@ use nalgebra::Vector3;
 /// A ray starting at `origin` at `time` pointing in `direction`.
 ///
 /// # Fields
-/// - `origin`: [Point] of emission.
+/// - `origin`: Point of emission.
 /// - `direction`: direction.
 /// - `time`: time.
 #[derive(Clone, Copy)]

@@ -38,7 +38,7 @@ impl Camera {
     ///
     /// # Parameters
     /// - `lookfrom`: Position of the camera.
-    /// - `lookat`: [Vector3<f32>] the camera is facing.
+    /// - `lookat`: Direction the camera is facing.
     /// - `vup`: Upwards direction of the camera.
     /// - `vertical_fov`: Angle of the vertical field of view (between point the camera is facing and the upper border of the viewport).
     /// - `aspect_ratio`: Aspect ratio of the viewport.
