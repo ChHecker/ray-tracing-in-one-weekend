@@ -2,6 +2,7 @@
 name = "ray-tracing-in-one-weekend"
 authors = ["Christopher Hecker"]
 description = "Implementation of Ray Tracing in One Weekend by Peter Shirley"
+license = "MIT"
 version = "0.2.8"
 edition = "2021"
 
