@@ -133,6 +133,6 @@ impl Texture for ImageTexture {
             j = self.image.height() - 1;
         }
 
-        self.image.get_pixel(i, j).clone().into()
+        (*self.image.get_pixel(i, j)).into()
     }
 }

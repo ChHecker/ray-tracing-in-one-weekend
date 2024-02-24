@@ -52,7 +52,7 @@ pub fn near_zero(vec: &Vector3<f32>) -> bool {
 /// Creates a random vector with each element between 0 and 1.
 pub fn random_vector() -> Vector3<f32> {
     let mut rng = rand::thread_rng();
-    Vector3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+    Vector3::new(rng.gen(), rng.gen(), rng.gen())
 }
 
 /// Creates a random vector with each element in a range.

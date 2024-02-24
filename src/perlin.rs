@@ -17,23 +17,7 @@ pub struct Perlin {
 
 impl Perlin {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
-
-        let mut random_points = [vector![0., 0., 0.]; POINT_COUNT];
-        for i in &mut random_points {
-            *i = random_vector_in_range(-1., 1.).normalize();
-        }
-
-        let permutation_x = Perlin::generate_permutation(&mut rng);
-        let permutation_y = Perlin::generate_permutation(&mut rng);
-        let permutation_z = Perlin::generate_permutation(&mut rng);
-
-        Self {
-            random_points,
-            permutation_x,
-            permutation_y,
-            permutation_z,
-        }
+        Default::default()
     }
 
     /// Generate Perlin noise.
@@ -121,6 +105,22 @@ impl Perlin {
 
 impl Default for Perlin {
     fn default() -> Self {
-        Self::new()
+        let mut rng = rand::thread_rng();
+
+        let mut random_points = [vector![0., 0., 0.]; POINT_COUNT];
+        for i in &mut random_points {
+            *i = random_vector_in_range(-1., 1.).normalize();
+        }
+
+        let permutation_x = Perlin::generate_permutation(&mut rng);
+        let permutation_y = Perlin::generate_permutation(&mut rng);
+        let permutation_z = Perlin::generate_permutation(&mut rng);
+
+        Self {
+            random_points,
+            permutation_x,
+            permutation_y,
+            permutation_z,
+        }
     }
 }

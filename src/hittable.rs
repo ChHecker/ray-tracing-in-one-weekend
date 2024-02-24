@@ -4,7 +4,7 @@
 
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
-use std::ops::Index;
+use std::ops::{Deref, Index};
 
 use nalgebra::Rotation3;
 use rand::Rng;
@@ -153,27 +153,20 @@ impl HittableList {
     /// - `axis`: Axis along which the minima should be compared.
     fn sort_by_box(&mut self, axis: usize) {
         self.hittables
-            .sort_by(|a, b| Hittable::cmp_box(&**a, &**b, axis));
+            .sort_by(|a, b| Hittable::cmp_box(a.deref(), b.deref(), axis));
     }
 
     /// Split at `mid` and return both halves.
     fn split_at(self, mid: usize) -> (Self, Self) {
-        let mut left = Vec::<HittableBox>::new();
-        let mut right = Vec::<HittableBox>::new();
-        for (i, hittable) in self.hittables.into_iter().enumerate() {
-            if i < mid {
-                left.push(hittable);
-            } else {
-                right.push(hittable);
-            }
-        }
+        let (left, right) = self.hittables.split_at(mid);
+
         (
             Self {
-                hittables: left,
+                hittables: left.to_owned(),
                 center: self.center.clone(),
             },
             Self {
-                hittables: right,
+                hittables: right.to_owned(),
                 center: self.center,
             },
         )
@@ -377,7 +370,9 @@ impl Bvh {
         time0: f32,
         time1: f32,
     ) -> Result<Self, BoundingBoxError> {
-        Bvh::check_hittable_list(&hittables)?;
+        if !Bvh::check_hittable_list(&hittables) {
+            return Err(BoundingBoxError);
+        }
 
         let mut rand = rand::thread_rng();
 
@@ -391,7 +386,7 @@ impl Bvh {
         } else if hittables.len() == 2 {
             let last = hittables.pop().unwrap();
             let first = hittables.pop().unwrap();
-            match first.cmp_box(&*last, axis) {
+            match first.cmp_box(last.deref(), axis) {
                 Ordering::Less | Ordering::Equal => {
                     subnode = BvhNode::Two(first, last);
                 }
@@ -426,18 +421,18 @@ impl Bvh {
         })
     }
 
-    pub fn check_hittable_list(hittables: &HittableList) -> Result<(), BoundingBoxError> {
+    pub fn check_hittable_list(hittables: &HittableList) -> bool {
         if hittables.is_empty() {
-            return Err(BoundingBoxError);
+            return false;
         }
 
         for hittable in &hittables.hittables {
             if hittable.bounding_box(0., 0.).is_none() {
-                return Err(BoundingBoxError);
+                return false;
             }
         }
 
-        Ok(())
+        true
     }
 }
 
@@ -509,14 +504,14 @@ mod test {
 
         let ray_hit_left = Ray::new(vector![0., 0., 0.], vector![-2., 0., -1.]);
         let hit_left = bvh.hit(ray_hit_left, 0., f32::INFINITY);
-        assert_eq!(hit_left.is_some(), true);
+        assert!(hit_left.is_some());
 
         let ray_hit_right = Ray::new(vector![0., 0., 0.], vector![2., 0., -1.]);
         let hit_right = bvh.hit(ray_hit_right, 0., f32::INFINITY);
-        assert_eq!(hit_right.is_some(), true);
+        assert!(hit_right.is_some());
 
         let ray_no_hit = Ray::new(vector![0., 0., 0.], vector![0., 0., 1.]);
         let no_hit = bvh.hit(ray_no_hit, 0., f32::INFINITY);
-        assert_eq!(no_hit.is_some(), false);
+        assert!(no_hit.is_none());
     }
 }

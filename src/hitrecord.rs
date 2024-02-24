@@ -1,4 +1,4 @@
-//! A recrod for when [Ray]s hit something.
+//! A record for when [Ray]s hit something.
 
 use crate::materials::Material;
 use crate::ray::Ray;

@@ -8,7 +8,7 @@ use crate::*;
 /// Macro for [`Color::new`]
 #[macro_export]
 macro_rules! color {
-    ($r:expr, $g:expr, $b:expr $(,)*) => {
+    [$r:expr, $g:expr, $b:expr $(,)*] => {
         Color::new($r, $g, $b)
     };
 }
@@ -43,7 +43,7 @@ impl Color {
     /// Creates a random vector with each element between 0 and 1.
     pub fn random() -> Self {
         let mut rng = rand::thread_rng();
-        Color::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+        Color::new(rng.gen(), rng.gen(), rng.gen())
     }
 
     /// Creates a random vector with each element in a range.
@@ -58,31 +58,24 @@ impl Color {
 
     /// Formats the [`Color`] as a [`String`], converting the `f32` RGB values to `u8`.
     pub(crate) fn to_color_str(self) -> String {
-        format!(
-            "{} {} {}",
-            (256. * self.r().clamp(0., 0.999)) as u8,
-            (256. * self.g().clamp(0., 0.999)) as u8,
-            (256. * self.b().clamp(0., 0.999)) as u8
-        )
+        let rgb: [u8; 3] = self.into();
+        format!("{} {} {}", rgb[0], rgb[1], rgb[2])
     }
+}
 
-    /// Converts to an [`u8`] array.
-    pub(crate) fn to_rgb_array(self) -> [u8; 3] {
+impl From<Color> for [u8; 3] {
+    fn from(color: Color) -> [u8; 3] {
         [
-            (256. * self.r().clamp(0., 0.999)) as u8,
-            (256. * self.g().clamp(0., 0.999)) as u8,
-            (256. * self.b().clamp(0., 0.999)) as u8,
+            (256. * color.r().clamp(0., 0.999)) as u8,
+            (256. * color.g().clamp(0., 0.999)) as u8,
+            (256. * color.b().clamp(0., 0.999)) as u8,
         ]
     }
 }
 
 impl From<Color> for Rgb<u8> {
     fn from(color: Color) -> Rgb<u8> {
-        Rgb([
-            (256. * color.r().clamp(0., 0.999)) as u8,
-            (256. * color.g().clamp(0., 0.999)) as u8,
-            (256. * color.b().clamp(0., 0.999)) as u8,
-        ])
+        Rgb(color.into())
     }
 }
 
@@ -196,24 +189,24 @@ impl ops::Index<u8> for Color {
 }
 
 /// Iterator over the RGB values of [`Color`].
-pub struct Color3Iter {
+pub struct ColorIter {
     index: usize,
     col3: Color,
 }
 
 impl IntoIterator for Color {
     type Item = f32;
-    type IntoIter = Color3Iter;
+    type IntoIter = ColorIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        Color3Iter {
+        ColorIter {
             index: 0,
             col3: self,
         }
     }
 }
 
-impl Iterator for Color3Iter {
+impl Iterator for ColorIter {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -308,6 +301,7 @@ mod tests {
 
     #[test]
     #[should_panic]
+    #[allow(clippy::no_effect)]
     fn index() {
         let v = color![1., 2., 3.];
         v[3];

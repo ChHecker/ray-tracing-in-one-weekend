@@ -8,7 +8,7 @@ use rand::Rng;
 use rayon::prelude::*;
 
 use crate::color::BLACK;
-use crate::hittable::{BoundingBoxError, Bvh, HittableListOptions};
+use crate::hittable::{Bvh, HittableListOptions};
 use crate::ppm::PPM;
 use crate::ray::Ray;
 use crate::*;
@@ -110,11 +110,11 @@ impl Raytracer {
 
     fn render_multithreaded(self) -> Vec<Color> {
         let world = match Bvh::check_hittable_list(&self.world) {
-            Ok(()) => {
+            true => {
                 eprintln!("Using BVH.");
                 HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH"))
             }
-            Err(BoundingBoxError) => {
+            false => {
                 eprintln!("BVH not available. Falling back to linear search.");
                 HittableListOptions::HittableList(self.world)
             }
@@ -267,7 +267,7 @@ impl RaytracedImage {
         let image: Vec<u8> = self
             .image
             .iter()
-            .flat_map(|color| color.to_rgb_array())
+            .flat_map(|color| Into::<[u8; 3]>::into(*color))
             .collect();
         RgbImage::from_vec(self.image_width.into(), self.image_height.into(), image)
     }

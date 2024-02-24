@@ -50,7 +50,7 @@ impl PPM {
             "P3\n{} {}\n255\n",
             self.image_width, self.image_height
         ));
-        for (_, color) in self.colors.iter().enumerate() {
+        for color in self.colors.iter() {
             out.push_str(&color.to_color_str());
             out.push('\n');
         }

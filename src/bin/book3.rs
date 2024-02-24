@@ -3,7 +3,7 @@ use std::path::Path;
 use nalgebra::Rotation3;
 #[allow(unused_imports)]
 use rand::Rng;
-use ray_tracing_in_one_weekend::color::{BLACK, BLUE, GREEN, RED, WHITE};
+use ray_tracing_in_one_weekend::color::{BLACK, GREEN, RED, WHITE};
 use ray_tracing_in_one_weekend::materials::*;
 use ray_tracing_in_one_weekend::shapes::*;
 use ray_tracing_in_one_weekend::textures::*;
