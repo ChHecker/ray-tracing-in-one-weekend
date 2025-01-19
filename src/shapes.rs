@@ -76,7 +76,7 @@ impl Offset {
         ray: Ray,
         t_min: f32,
         t_max: f32,
-    ) -> Option<HitRecord> {
+    ) -> Option<HitRecord<'a>> {
         // Rotation
         let rotated_ray = match self.rotation {
             Some(rotation) => {
@@ -704,14 +704,8 @@ where
     fn hit_origin(&self, ray: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut rng = rand::thread_rng();
 
-        let mut hit1 = match self.boundary.hit(ray, -f32::INFINITY, f32::INFINITY) {
-            Some(hit) => hit,
-            None => return None,
-        };
-        let mut hit2 = match self.boundary.hit(ray, hit1.t + 0.0001, f32::INFINITY) {
-            Some(hit) => hit,
-            None => return None,
-        };
+        let mut hit1 = self.boundary.hit(ray, -f32::INFINITY, f32::INFINITY)?;
+        let mut hit2 = self.boundary.hit(ray, hit1.t + 0.0001, f32::INFINITY)?;
 
         if hit1.t < t_min {
             hit1.t = t_min
