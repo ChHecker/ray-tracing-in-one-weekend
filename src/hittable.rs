@@ -4,7 +4,7 @@
 
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
-use std::ops::{Deref, Index};
+use std::ops::Index;
 use std::sync::Arc;
 
 use nalgebra::Rotation3;
@@ -137,7 +137,7 @@ impl HittableList {
     /// - `axis`: Axis along which the minima should be compared.
     fn sort_by_box(&mut self, axis: usize) {
         self.hittables
-            .sort_by(|a, b| Hittable::cmp_box(a.deref(), b.deref(), axis));
+            .sort_by(|a, b| Hittable::cmp_box(a.as_ref(), b.as_ref(), axis));
     }
 
     /// Split at `mid` and return both halves.
@@ -370,7 +370,7 @@ impl Bvh {
         } else if hittables.len() == 2 {
             let last = hittables.pop().unwrap();
             let first = hittables.pop().unwrap();
-            match first.cmp_box(last.deref(), axis) {
+            match first.cmp_box(last.as_ref(), axis) {
                 Ordering::Less | Ordering::Equal => {
                     subnode = BvhNode::Two(first, last);
                 }
