@@ -5,6 +5,7 @@
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
 use std::ops::{Deref, Index};
+use std::sync::Arc;
 
 use nalgebra::Rotation3;
 use rand::Rng;
@@ -14,30 +15,13 @@ use crate::ray::Ray;
 use crate::shapes::{Movable, Offset};
 use crate::*;
 
-type HittableBox = Box<dyn Hittable>;
-
-/// Allows for cloning [`Hittable`]s.
-pub trait HittableClone {
-    fn box_clone(&self) -> HittableBox;
-}
-
-impl<T: Hittable + Clone + 'static> HittableClone for T {
-    fn box_clone(&self) -> HittableBox {
-        Box::new(self.clone())
-    }
-}
-
-impl Clone for HittableBox {
-    fn clone(&self) -> HittableBox {
-        self.box_clone()
-    }
-}
+type HittableArc = Arc<dyn Hittable>;
 
 /// An abstraction over all objects that can be hit by [Ray]s.
 ///
 /// All objects that can be hit by [`Ray`]s and encompassed by [axis-aligned bounding boxes](Aabb) should implement [`Hittable`]. This not only includes shapes, but also more abstract objects like [lists of shapes](HittableList).
 /// `Send + Sync` is necessary for multithreading.
-pub trait Hittable: Debug + HittableClone + Send + Sync {
+pub trait Hittable: Debug + Send + Sync {
     /// Check whether a [Ray] hits the object at the origin inside an allowed parameter range.
     ///
     /// **Do not manually use this function! This should only be overwritten for new [`shapes`], but not manually used! Use [`hit`](Hittable::hit) instead!**
@@ -108,7 +92,7 @@ pub trait Hittable: Debug + HittableClone + Send + Sync {
 #[derive(Clone, Default, Debug)]
 pub struct HittableList {
     center: Offset,
-    hittables: Vec<HittableBox>,
+    hittables: Vec<HittableArc>,
 }
 
 impl HittableList {
@@ -122,7 +106,7 @@ impl HittableList {
 
     /// Push a new [`Hittable`] to the end.
     pub fn push<H: Hittable + 'static>(&mut self, hittable: H) {
-        self.hittables.push(Box::new(hittable));
+        self.hittables.push(Arc::new(hittable));
     }
 
     /// Clear the [`HittableList`].
@@ -141,7 +125,7 @@ impl HittableList {
     }
 
     /// Remove the last [`Hittable`] and return it.
-    pub fn pop(&mut self) -> Option<HittableBox> {
+    pub fn pop(&mut self) -> Option<HittableArc> {
         self.hittables.pop()
     }
 
@@ -226,7 +210,7 @@ impl Movable for HittableList {
 }
 
 impl Index<usize> for HittableList {
-    type Output = HittableBox;
+    type Output = HittableArc;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.hittables[index]
@@ -336,8 +320,8 @@ impl fmt::Display for BoundingBoxError {
 /// [`Bvh`]s are binary trees and might therefore sometimes end with only one node. With this enum, [`Option`] is not needed.
 #[derive(Clone, Debug)]
 enum BvhNode {
-    One(HittableBox),
-    Two(HittableBox, HittableBox),
+    One(HittableArc),
+    Two(HittableArc, HittableArc),
 }
 
 /// Bounding Volume Hierarchy.
@@ -400,8 +384,8 @@ impl Bvh {
             let mid = hittables.len() / 2;
             let split = hittables.split_at(mid);
 
-            let left = Box::new(Bvh::new(split.0, time0, time1)?);
-            let right = Box::new(Bvh::new(split.1, time0, time1)?);
+            let left = Arc::new(Bvh::new(split.0, time0, time1)?);
+            let right = Arc::new(Bvh::new(split.1, time0, time1)?);
 
             subnode = BvhNode::Two(left, right);
         }
@@ -485,12 +469,12 @@ mod test {
     fn bvh_hit() {
         let black = SolidColor::new(color![1., 1., 1.]);
         let black_lambertian = Lambertian::new(black);
-        let left = Box::new(Sphere::new(
+        let left = Arc::new(Sphere::new(
             vector![-2., 0., -1.],
             1.,
             black_lambertian.clone(),
         ));
-        let right = Box::new(Sphere::new(vector![2., 0., -1.], 1., black_lambertian));
+        let right = Arc::new(Sphere::new(vector![2., 0., -1.], 1., black_lambertian));
         let aabb = Aabb::surrounding(
             &left.bounding_box(0., 0.).unwrap(),
             &right.bounding_box(0., 0.).unwrap(),
