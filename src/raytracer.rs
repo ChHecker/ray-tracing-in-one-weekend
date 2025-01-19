@@ -110,14 +110,8 @@ impl Raytracer {
 
     fn render_multithreaded(self) -> Vec<Color> {
         let world = match Bvh::check_hittable_list(&self.world) {
-            true => {
-                eprintln!("Using BVH.");
-                HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH"))
-            }
-            false => {
-                eprintln!("BVH not available. Falling back to linear search.");
-                HittableListOptions::HittableList(self.world)
-            }
+            true => HittableListOptions::Bvh(Bvh::new(self.world, 0., 0.).expect("creating BVH")),
+            false => HittableListOptions::HittableList(self.world),
         };
 
         let mut colors =
